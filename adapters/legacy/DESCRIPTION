@@ -1,0 +1,10 @@
+Package: legacy
+Title: provides ichimomo/frasyr via API
+Version: 0.0.0.9000
+Authors@R: 
+    person("Akira", "Hayashi", , "dev@rindrics.com", role = c("aut", "cre"))
+Description: provides ichimomo/frasyr via API
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.0.0
