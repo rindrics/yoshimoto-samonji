@@ -1,3 +1,4 @@
 .Rhistory
 .env
 schema/openapi.json
+*.tar.gz

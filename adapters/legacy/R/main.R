@@ -4,6 +4,7 @@
 #* @apiContact list(name = "Rindrics", url = "https://github.com/Rindrics/yoshimoto-samonji", email = "dev+yoshimoto-samonji@rindrics.com")
 #* @apiLicense list(name = "MIT", url = "https://opensource.org/licenses/MIT")
 #* @apiTag vpa Operations for Virtual Population Analysis
+#' @export
 start_server <- function() {
     pr <- plumber::pr("R/main.R")
     pr$mount("/vpa", plumber::pr("R/vpa.R"))
