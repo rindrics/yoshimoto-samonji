@@ -1,4 +1,4 @@
-# souzasamonji
+# yoshimoto-samonji
 
 PoC project of stock assessent web app
 
