@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  api:
+  monolith:
     build:
       context: ./adapters/legacy
       dockerfile: Dockerfile
