@@ -1,0 +1,12 @@
+.git
+.gitignore
+.Rhistory
+.RData
+.Rprofile
+.renv
+renv
+node_modules
+.DS_Store
+*.swp
+*.swo
+Dockerfile
