@@ -4,14 +4,14 @@
 #* @apiContact list(name = "Rindrics", url = "https://github.com/Rindrics/yoshimoto-samonji", email = "dev+yoshimoto-samonji@rindrics.com")
 #* @apiLicense list(name = "MIT", url = "https://opensource.org/licenses/MIT")
 #* @apiTag vpa Operations for Virtual Population Analysis
-#' @export
-start_server <- function() {
-    pr <- plumber::pr("R/main.R")
-    pr$mount("/vpa", plumber::pr("R/vpa.R"))
 
-    spec <- pr$getApiSpec()
-    jsonlite::write_json(spec, "../../schema/openapi.json", pretty = TRUE)
+pr <- plumber::pr()
+pr$mount("/vpa", plumber::plumb("vpa.R"))
 
-    port <- Sys.getenv("PLUMBER_PORT")
-    pr$run(host = "0.0.0.0", port = port)
-}
+# Generate OpenAPI spec
+spec <- pr$getApiSpec()
+jsonlite::write_json(spec, "../../schema/openapi.json", pretty = TRUE)
+
+# Run server
+port <- Sys.getenv("PLUMBER_PORT", "8000")
+pr$run(host = "0.0.0.0", port = as.integer(port))
