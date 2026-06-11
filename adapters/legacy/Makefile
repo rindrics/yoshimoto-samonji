@@ -13,10 +13,10 @@ help:
 	@echo "  make clean        - Remove schema files"
 
 run:
-	PLUMBER_PORT=$(PLUMBER_PORT) Rscript plumber.R
+	PLUMBER_PORT=$(PLUMBER_PORT) Rscript run.R
 
 schema:
-	Rscript -e "plumber::plumb('plumber.R')$$getApiSpec() |> jsonlite::write_json('../../schema/openapi.json', pretty=TRUE)"
+	Rscript generate_schema.R
 
 docker-build:
 	docker-compose build api

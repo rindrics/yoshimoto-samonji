@@ -5,13 +5,10 @@
 #* @apiLicense list(name = "MIT", url = "https://opensource.org/licenses/MIT")
 #* @apiTag vpa Operations for Virtual Population Analysis
 
-pr <- plumber::pr()
-pr$mount("/vpa", plumber::plumb("vpa.R"))
-
-# Generate OpenAPI spec
-spec <- pr$getApiSpec()
-jsonlite::write_json(spec, "../../schema/openapi.json", pretty = TRUE)
-
-# Run server
-port <- Sys.getenv("PLUMBER_PORT", "8000")
-pr$run(host = "0.0.0.0", port = as.integer(port))
+#* Echo back the input
+#* @tag vpa
+#* @param msg The message to echo
+#* @get /vpa/echo
+function(msg="") {
+  list(msg = paste0("The message is: '", msg, "'"))
+}
