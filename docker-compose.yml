@@ -5,10 +5,12 @@ services:
     build:
       context: ./adapters/legacy
       dockerfile: Dockerfile
+      args:
+        CONTAINER_PORT: ${CONTAINER_PORT:-8000}
     ports:
-      - "8000:8000"
+      - "${PLUMBER_PORT}:${CONTAINER_PORT:-8000}"
     environment:
-      PLUMBER_PORT: 8000
+      PLUMBER_PORT: "${CONTAINER_PORT:-8000}"
     volumes:
       - ./adapters/legacy/R:/app/R
       - ./schema:/app/../../schema
