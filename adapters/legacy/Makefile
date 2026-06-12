@@ -19,16 +19,16 @@ schema:
 	Rscript generate_schema.R
 
 docker-build:
-	docker-compose build api
+	docker-compose build monolith
 
 docker-up:
-	docker-compose up -d api
+	docker-compose up -d monolith
 
 docker-down:
 	docker-compose down
 
 docker-logs:
-	docker-compose logs -f api
+	docker-compose logs -f monolith
 
 clean:
 	rm -f ../../schema/openapi.json
