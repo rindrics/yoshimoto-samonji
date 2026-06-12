@@ -9,14 +9,23 @@ library(frasyr)
 
 #* Run VPA
 #* @tag vpa
-#* @get /vpa
-function() {
+#* @post /vpa
+#* @param urlCaa: URL to obtain catch-at-age data in csv
+#* @param urlWaa: URL to obtain weight-at-age data in csv
+#* @param urlMaa: URL to obtain maturation-at-age data in csv
+#* @param m: Natural mortality in decimal (default: 0.5)
+function(
+    urlCaa = "https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_caa.csv",
+    urlWaa = "https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_waa.csv",
+    urlMaa = "https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_maa.csv",
+    m      = 0.5
+    ) {
     result_vpa <- vpa(
         data.handler(
-            caa = read.csv("../../data/ex2_caa.csv", row.names = 1),
-            waa = read.csv("../../data/ex2_waa.csv", row.names = 1),
-            maa = read.csv("../../data/ex2_maa.csv", row.names = 1),
-            M = 0.5
+            caa = read.csv(urlCaa, row.names = 1),
+            waa = read.csv(urlWaa, row.names = 1),
+            maa = read.csv(urlMaa, row.names = 1),
+            M   = as.numeric(m)
         ),
         fc.year = 2015:2017,
         tf.year = 2015:2016,
