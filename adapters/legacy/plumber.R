@@ -9,7 +9,7 @@ library(frasyr)
 
 #* Run VPA
 #* @tag vpa
-#* @post /vpa
+#* @post /v0/vpa
 #* @param urlCaa: URL to obtain catch-at-age data in csv
 #* @param urlWaa: URL to obtain weight-at-age data in csv
 #* @param urlMaa: URL to obtain maturation-at-age data in csv
