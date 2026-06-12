@@ -2,11 +2,11 @@
 .gitignore
 .Rhistory
 .RData
-.Rprofile
-.renv
-renv
 node_modules
 .DS_Store
 *.swp
 *.swo
 Dockerfile
+gen_schema.R
+Makefile
+vpa.R

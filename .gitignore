@@ -2,3 +2,4 @@
 .env
 schema/openapi.json
 *.tar.gz
+openapi.json
