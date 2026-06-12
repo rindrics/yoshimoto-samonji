@@ -1,3 +1,4 @@
+library(frasyr)
 #* @apiTitle Stock Assessment API
 #* @apiDescription API for stock assessment calculation using ichimomo/frasyr
 #* @apiVersion 0.1.0
