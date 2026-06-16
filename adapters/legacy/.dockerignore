@@ -9,4 +9,3 @@ node_modules
 Dockerfile
 gen_schema.R
 Makefile
-vpa.R

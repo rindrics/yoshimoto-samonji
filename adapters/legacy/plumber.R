@@ -5,13 +5,11 @@ library(frasyr)
 #* @apiContact list(name = "Rindrics", url = "https://github.com/Rindrics/yoshimoto-samonji", email = "dev+yoshimoto-samonji@rindrics.com")
 #* @apiLicense list(name = "MIT", url = "https://opensource.org/licenses/MIT")
 #* @apiTag vpa Operations for Virtual Population Analysis
-#* @apiTag stock_assessment Operations for stock assessment
 
 #* Run VPA
 #* @tag vpa
 #* @post /v0/vpa
-#*   description: "Age cohort catch-at-age data indexed by
-#*   age group and year"
+#*   description: "Run Virtual Population Analysis"
 #* @serializer unboxedJSON
 function(req) {
     body <- jsonlite::fromJSON(req$postBody)
