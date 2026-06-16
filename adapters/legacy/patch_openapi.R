@@ -8,16 +8,18 @@ add_openapi_schema <- function(spec) {
 
 vpa_response_schema <- function() {
   list(
-    description = "Age cohort catch-at-age (in weight) data indexed by age group and year",
+    description = "Age cohort catch-at-age data indexed by age group and year",
     content = list(
       "application/json" = list(
         schema = list(
           type = "object",
+          description = "Object with age groups (e.g., age0, age1, age2...) as keys. Each age group contains yearly catch-at-age values.",
           additionalProperties = list(
             type = "object",
-            description = "Year to catch value mapping",
+            description = "Year to catch weight mapping for each age group",
             additionalProperties = list(
-              type = "number"
+              type = "number",
+              description = "Catch weight at age for the year"
             )
           )
         ),
