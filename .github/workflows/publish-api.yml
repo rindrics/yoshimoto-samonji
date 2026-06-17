@@ -45,7 +45,7 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,prefix={{branch}}-
+            type=sha,prefix=sha-
 
       - name: Build Docker image
         run: make docker-build
@@ -53,7 +53,8 @@ jobs:
 
       - name: Tag and push Docker image
         run: |
-          for tag in ${{ steps.meta.outputs.tags }}; do
+          while IFS= read -r tag; do
+            echo "Pushing $tag"
             docker tag souzasamonji-monolith:latest "$tag"
             docker push "$tag"
-          done
+          done <<< "${{ steps.meta.outputs.tags }}"
