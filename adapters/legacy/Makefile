@@ -19,7 +19,7 @@ schema:
 	Rscript generate_schema.R
 
 docker-build:
-	docker build --no-cache -t souzasamonji-monolith:latest ./
+	docker build --no-cache -t ghcr.io/rindrics/yoshimoto-samonji/monolith:latest ./
 
 clean:
 	rm -f ../../schema/openapi.json

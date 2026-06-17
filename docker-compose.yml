@@ -1,6 +1,6 @@
 services:
   monolith:
-    image: souzasamonji-monolith:latest
+    image: ghcr.io/rindrics/yoshimoto-samonji/monolith:latest
     ports:
       - "${PLUMBER_PORT}:${CONTAINER_PORT:-8000}"
     environment:
