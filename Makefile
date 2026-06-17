@@ -29,7 +29,7 @@ docker-logs:
 	docker-compose logs -f monolith
 
 docker-clean:
-	docker image rm souzasamonji-monolith:latest || true
+	docker image rm ghcr.io/rindrics/yoshimoto-samonji/monolith:latest || true
 	docker builder prune -af
 
 docker-clean-build: docker-clean docker-build
