@@ -41,19 +41,6 @@ paths:
                   "1989": 6345.67
                   "1990": 7456.78
                   "1991": 4567.89
-        "500":
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                type: string
-        default:
-          description: Default response.
-          content:
-            application/json:
-              schema:
-                type: object
-      parameters: []
       requestBody:
         required: true
         content:
