@@ -139,5 +139,3 @@ paths:
 tags:
   - name: vpa
     description: Operations for Virtual Population Analysis
-  - name: stock_assessment
-    description: Operations for stock assessment
