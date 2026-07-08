@@ -1,0 +1,55 @@
+name: Contract Test with Dredd
+
+on:
+  pull_request:
+    paths:
+      - 'schema/openapi.yaml'
+      - 'adapters/legacy/**'
+      - 'docker-compose.yml'
+      - '.github/workflows/contract-test.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'schema/openapi.yaml'
+      - 'adapters/legacy/**'
+
+jobs:
+  contract-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb  # v7.0.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@60edb440c36b373f56192b841e8a6b6e6ad0c91b  # v4.0.2
+        with:
+          node-version: '18'
+
+      - name: Install Dredd
+        run: npm install -g dredd
+
+      - name: Start plumber API
+        env:
+          PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
+        run: |
+          docker-compose up -d monolith
+          sleep 5
+
+      - name: Run contract tests
+        env:
+          PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
+        run: |
+          dredd schema/openapi.yaml http://localhost:$PLUMBER_PORT \
+            --reporter=json \
+            --output=dredd-result.json
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@c7d193f32edde7bfbb20892bab119e07aefc1473  # v4.3.1
+        with:
+          name: dredd-results
+          path: dredd-result.json
+
+      - name: Stop services
+        if: always()
+        run: docker-compose down
