@@ -15,7 +15,7 @@ paths:
     post:
       operationId: /v0/vpa-POST
       summary: Run VPA
-      description: 'description: "Run Virtual Population Analysis"'
+      description: Run Virtual Population Analysis
       responses:
         "200":
           description: Age cohort catch-at-age data indexed by age group and year
