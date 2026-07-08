@@ -73,18 +73,23 @@ paths:
                     caa_url:
                       type: string
                       format: uri
+                      description: URL to catch-at-age CSV file
                     waa_url:
                       type: string
                       format: uri
+                      description: URL to weight-at-age CSV file
                     maa_url:
                       type: string
                       format: uri
+                      description: URL to maturity-at-age CSV file
                 params:
                   type: object
+                  description: Optional VPA parameters
                   properties:
                     m:
                       type: number
                       default: 0.5
+                      description: Natural mortality rate
                     fc_year:
                       type: array
                       items:
@@ -93,6 +98,7 @@ paths:
                         - 2015
                         - 2016
                         - 2017
+                      description: Years for fishing mortality calculation
                     tf_year:
                       type: array
                       items:
@@ -100,21 +106,35 @@ paths:
                       example:
                         - 2015
                         - 2016
+                      description: Years for terminal F calculation
                     term_f:
                       type: string
                       default: max
+                      enum:
+                        - max
+                        - mean
+                      description: Terminal F calculation method
                     stat_tf:
                       type: string
                       default: mean
+                      enum:
+                        - mean
+                        - median
+                        - max
+                        - min
+                      description: Terminal F statistic
                     pope:
                       type: boolean
                       default: true
+                      description: Use Pope's approximation
                     tune:
                       type: boolean
                       default: false
+                      description: Tune VPA parameters
                     p_init:
                       type: number
                       default: 0.5
+                      description: Initial population parameter
             example:
               data:
                 caa_url: https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_caa.csv
