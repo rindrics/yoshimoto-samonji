@@ -1,3 +1,4 @@
+---
 openapi: 3.0.3
 info:
   description: API for stock assessment calculation using ichimomo/frasyr
