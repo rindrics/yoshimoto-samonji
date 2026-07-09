@@ -1,0 +1,9 @@
+{
+  "name": "yoshimoto-samonji-ci",
+  "version": "1.0.0",
+  "description": "CI tools for yoshimoto-samonji",
+  "private": true,
+  "devDependencies": {
+    "dredd": "14.1.0"
+  }
+}
