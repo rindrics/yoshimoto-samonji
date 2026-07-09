@@ -1,6 +1,11 @@
 library(frasyr)
 library(jsonvalidate)
 library(yaml)
+library(logger)
+
+# Configure logging
+log_level <- Sys.getenv("LOG_LEVEL", "INFO")
+log_threshold(log_level)
 
 # Load request schema from openapi.yaml (single source of truth)
 # Priority: env var > local path > docker path
@@ -45,17 +50,24 @@ vpa_request_schema <- jsonlite::toJSON(
 #*   description: "Run Virtual Population Analysis"
 #* @serializer unboxedJSON
 function(req, res) {
+    log_info("POST /v0/vpa - Request received")
+
     # Validate request
     body <- jsonlite::fromJSON(req$postBody)
     req_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
+    log_debug("Request body: {req_json}")
 
     if (!jsonvalidate::json_validate(req_json, vpa_request_schema)) {
+      log_warn("POST /v0/vpa - Request validation failed")
       res$status <- 400
       return(list(error = "Invalid request: data with caa_url, waa_url, maa_url required"))
     }
 
+    log_info("POST /v0/vpa - Request validation passed")
+
     data <- body$data
     params <- body$params %||% list()
+    log_debug("VPA parameters: m={params$m}, fc_year={paste(params$fc_year, collapse=',')}")
 
     result_vpa <- vpa(
         data.handler(
@@ -82,13 +94,16 @@ function(req, res) {
       paste0("age", seq_len(nrow(wcaa)) - 1)
     )
 
+    log_info("POST /v0/vpa - VPA calculation completed")
+
     # Validate response (dev only)
     if (Sys.getenv("VALIDATE_RESPONSE", "false") == "true") {
       res_json <- jsonlite::toJSON(result, auto_unbox = TRUE)
       if (!jsonvalidate::json_validate(res_json, "{}")) {
-        warning("Response validation failed for VPA endpoint")
+        log_warn("Response validation failed for VPA endpoint")
       }
     }
 
+    log_debug("Response: {nchar(jsonlite::toJSON(result))} bytes")
     return(result)
 }
