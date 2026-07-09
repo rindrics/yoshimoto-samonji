@@ -25,8 +25,13 @@ jobs:
         with:
           node-version: '18'
 
-      - name: Install Dredd
-        run: npm install -g dredd
+      - name: Set up pnpm
+        uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271  # v6.0.9
+        with:
+          version: '10'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Start plumber API
         env:
@@ -39,7 +44,7 @@ jobs:
         env:
           PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
         run: |
-          dredd schema/openapi.yaml http://localhost:$PLUMBER_PORT \
+          pnpm exec dredd schema/openapi.yaml http://localhost:$PLUMBER_PORT \
             --reporter=json \
             --output=dredd-result.json
 
