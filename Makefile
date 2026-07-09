@@ -13,7 +13,6 @@ help:
 	@echo ""
 	@echo "For adapter-specific commands, use:"
 	@echo "  make -C adapters/legacy run"
-	@echo "  make -C adapters/legacy schema"
 	@echo "  make -C adapters/legacy clean"
 
 docker-build:
