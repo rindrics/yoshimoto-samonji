@@ -1,0 +1,149 @@
+---
+openapi: 3.0.3
+info:
+  description: API for stock assessment calculation using ichimomo/frasyr
+  title: Stock Assessment API
+  version: 0.1.0
+  contact:
+    name: Rindrics
+    url: https://github.com/Rindrics/yoshimoto-samonji
+    email: dev+yoshimoto-samonji@rindrics.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+paths:
+  /v0/vpa:
+    post:
+      operationId: /v0/vpa-POST
+      summary: Run VPA
+      description: Run Virtual Population Analysis
+      responses:
+        "200":
+          description: Age cohort catch-at-age data indexed by age group and year
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Object with age groups (e.g., age0, age1, age2...) as keys. Each age group contains yearly catch-at-age values.
+                additionalProperties:
+                  type: object
+                  description: Year to catch weight mapping for each age group
+                  additionalProperties:
+                    type: number
+                    description: Catch weight at age for the year
+              example:
+                age0:
+                  "1988": 6816.76
+                  "1989": 8429.68
+                  "1990": 8145.12
+                  "1991": 2817.16
+                age1:
+                  "1988": 5234.56
+                  "1989": 6345.67
+                  "1990": 7456.78
+                  "1991": 4567.89
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - data
+              properties:
+                data:
+                  type: object
+                  required:
+                    - caa_url
+                    - waa_url
+                    - maa_url
+                  properties:
+                    caa_url:
+                      type: string
+                      format: uri
+                      description: URL to catch-at-age CSV file
+                    waa_url:
+                      type: string
+                      format: uri
+                      description: URL to weight-at-age CSV file
+                    maa_url:
+                      type: string
+                      format: uri
+                      description: URL to maturity-at-age CSV file
+                params:
+                  type: object
+                  description: Optional VPA parameters
+                  properties:
+                    m:
+                      type: number
+                      default: 0.5
+                      description: Natural mortality rate
+                    fc_year:
+                      type: array
+                      items:
+                        type: integer
+                      example:
+                        - 2015
+                        - 2016
+                        - 2017
+                      description: Years for fishing mortality calculation
+                    tf_year:
+                      type: array
+                      items:
+                        type: integer
+                      example:
+                        - 2015
+                        - 2016
+                      description: Years for terminal F calculation
+                    term_f:
+                      type: string
+                      default: max
+                      enum:
+                        - max
+                        - mean
+                      description: Terminal F calculation method
+                    stat_tf:
+                      type: string
+                      default: mean
+                      enum:
+                        - mean
+                        - median
+                        - max
+                        - min
+                      description: Terminal F statistic
+                    pope:
+                      type: boolean
+                      default: true
+                      description: Use Pope's approximation
+                    tune:
+                      type: boolean
+                      default: false
+                      description: Tune VPA parameters
+                    p_init:
+                      type: number
+                      default: 0.5
+                      description: Initial population parameter
+            example:
+              data:
+                caa_url: https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_caa.csv
+                waa_url: https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_waa.csv
+                maa_url: https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_maa.csv
+              params:
+                m: 0.5
+                fc_year:
+                  - 2015
+                  - 2016
+                  - 2017
+                tf_year:
+                  - 2015
+                  - 2016
+                term_f: max
+                stat_tf: mean
+                pope: true
+                tune: false
+                p_init: 0.5
+      tags:
+        - vpa
+tags:
+  - name: vpa
+    description: Operations for Virtual Population Analysis

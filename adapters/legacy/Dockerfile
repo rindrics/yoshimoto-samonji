@@ -29,7 +29,7 @@ COPY renv renv
 RUN USE_BUNDLED_LIBUV=1 R -e "renv::restore()"
 
 # Copy application files
-COPY patch_openapi.R plumber.R run.R ./
+COPY plumber.R run.R ./
 
 ARG CONTAINER_PORT=8000
 EXPOSE ${CONTAINER_PORT}

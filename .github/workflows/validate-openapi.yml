@@ -1,0 +1,28 @@
+name: Validate OpenAPI YAML
+
+on:
+  pull_request:
+    paths:
+      - 'schema/openapi.yaml'
+      - '.github/workflows/validate-openapi.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'schema/openapi.yaml'
+
+jobs:
+  validate-yaml:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Validate OpenAPI YAML syntax
+        uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c  # v3.1.1
+        with:
+          file_or_dir: schema/openapi.yaml
+          config_data: |
+            extends: default
+            rules:
+              line-length: disable
+              comments: disable

@@ -1,10 +1,11 @@
 services:
   monolith:
-    image: ghcr.io/rindrics/yoshimoto-samonji/monolith:latest
+    image: ghcr.io/rindrics/yoshimoto-samonji/monolith:main
     ports:
       - "${PLUMBER_PORT}:${CONTAINER_PORT:-8000}"
     environment:
       PLUMBER_PORT: "${CONTAINER_PORT:-8000}"
+      LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     volumes:
       - ./adapters/legacy/R:/app/R
       - ./schema:/app/../../schema

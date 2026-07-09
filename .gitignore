@@ -1,5 +1,4 @@
 .Rhistory
 .env
-schema/openapi.json
 *.tar.gz
-openapi.json
+node_modules/
