@@ -31,6 +31,9 @@ RUN USE_BUNDLED_LIBUV=1 R -e "renv::restore()"
 # Copy application files
 COPY plumber.R run.R ./
 
+# Copy OpenAPI schema
+COPY ../../schema ./schema
+
 ARG CONTAINER_PORT=8000
 EXPOSE ${CONTAINER_PORT}
 

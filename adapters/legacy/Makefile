@@ -12,7 +12,7 @@ help:
 	@echo "  make docker-logs  - View container logs"
 
 run:
-	PLUMBER_PORT=$(PLUMBER_PORT) Rscript run.R
+	PLUMBER_PORT=$(PLUMBER_PORT) OPENAPI_SPEC_PATH=../../schema/openapi.yaml Rscript run.R
 
 docker-build:
 	docker build --no-cache -t ghcr.io/rindrics/yoshimoto-samonji/monolith:latest ./

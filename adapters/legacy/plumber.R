@@ -1,4 +1,37 @@
 library(frasyr)
+library(jsonvalidate)
+library(yaml)
+
+# Load request schema from openapi.yaml (single source of truth)
+# Priority: env var > local path > docker path
+resolve_schema_path <- function() {
+  # 1. Default: docker path
+  default_path <- "./schema/openapi.yaml"
+
+  # 2. Check environment variable (override for local dev)
+  env_path <- Sys.getenv("OPENAPI_SPEC_PATH", "")
+  if (nzchar(env_path)) {
+    if (!file.exists(env_path)) {
+      stop(sprintf("OPENAPI_SPEC_PATH not found: %s", env_path))
+    }
+    return(env_path)
+  }
+
+  # 3. Use default if it exists
+  if (file.exists(default_path)) {
+    return(default_path)
+  }
+
+  stop(sprintf("Cannot find schema at %s. Set OPENAPI_SPEC_PATH for custom path.", default_path))
+}
+
+schema_path <- resolve_schema_path()
+openapi_spec <- yaml::read_yaml(schema_path)
+vpa_request_schema <- jsonlite::toJSON(
+  openapi_spec$paths$`/v0/vpa`$post$requestBody$content$`application/json`$schema,
+  auto_unbox = TRUE
+)
+
 #* @apiTitle Stock Assessment API
 #* @apiDescription API for stock assessment calculation using ichimomo/frasyr
 #* @apiVersion 0.1.0
@@ -11,8 +44,15 @@ library(frasyr)
 #* @post /v0/vpa
 #*   description: "Run Virtual Population Analysis"
 #* @serializer unboxedJSON
-function(req) {
+function(req, res) {
+    # Validate request
     body <- jsonlite::fromJSON(req$postBody)
+    req_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
+
+    if (!jsonvalidate::json_validate(req_json, vpa_request_schema)) {
+      res$status <- 400
+      return(list(error = "Invalid request: data with caa_url, waa_url, maa_url required"))
+    }
 
     data <- body$data
     params <- body$params %||% list()
@@ -33,7 +73,7 @@ function(req) {
         p.init  = params$p_init %||% 0.5
     )
     wcaa <- as.data.frame(result_vpa$wcaa)
-    setNames(
+    result <- setNames(
         lapply(seq_len(nrow(wcaa)), function(i) {
         x <- unlist(wcaa[i, ], use.names = FALSE)
         names(x) <- colnames(wcaa)
@@ -41,4 +81,14 @@ function(req) {
       }),
       paste0("age", seq_len(nrow(wcaa)) - 1)
     )
+
+    # Validate response (dev only)
+    if (Sys.getenv("VALIDATE_RESPONSE", "false") == "true") {
+      res_json <- jsonlite::toJSON(result, auto_unbox = TRUE)
+      if (!jsonvalidate::json_validate(res_json, "{}")) {
+        warning("Response validation failed for VPA endpoint")
+      }
+    }
+
+    return(result)
 }

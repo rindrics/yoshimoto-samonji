@@ -49,6 +49,7 @@ jobs:
       - name: Start plumber API
         env:
           PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
+          VALIDATE_RESPONSE: "true"
         run: |
           docker compose up -d monolith
           sleep 5
