@@ -42,7 +42,7 @@ jobs:
           context: ./adapters/legacy
           file: ./adapters/legacy/Dockerfile
           load: true
-          tags: souzasamonji-monolith:latest
+          tags: yoshimotosamonji-monolith:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -50,7 +50,7 @@ jobs:
         env:
           PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
           VALIDATE_RESPONSE: "true"
-          MONOLITH_IMAGE: souzasamonji-monolith:latest
+          MONOLITH_IMAGE: yoshimotosamonji-monolith:latest
         run: |
           docker compose up -d monolith
           for i in $(seq 1 30); do
