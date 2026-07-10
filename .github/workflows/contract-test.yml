@@ -50,9 +50,15 @@ jobs:
         env:
           PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
           VALIDATE_RESPONSE: "true"
+          MONOLITH_IMAGE: souzasamonji-monolith:latest
         run: |
           docker compose up -d monolith
-          sleep 5
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null "http://localhost:$PLUMBER_PORT/" && break
+            echo "waiting for plumber... ($i)"
+            sleep 2
+          done
+          docker compose logs monolith
 
       - name: Run contract tests
         env:
