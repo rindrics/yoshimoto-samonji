@@ -50,6 +50,7 @@ jobs:
         env:
           PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
           VALIDATE_RESPONSE: "true"
+          MONOLITH_IMAGE: souzasamonji-monolith:latest
         run: |
           docker compose up -d monolith
           sleep 5
