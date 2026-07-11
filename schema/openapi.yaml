@@ -50,12 +50,8 @@ paths:
                 type: object
                 properties:
                   error:
-                    oneOf:
-                      - type: string
-                      - type: array
-                        items:
-                          type: string
-                    description: Error message(s) describing the validation failure
+                    type: string
+                    description: Error message(s) describing the validation failure (multiple errors separated by newlines)
         "404":
           description: Not Found - Failed to download CSV files from URL
           content:
