@@ -86,24 +86,26 @@ load_vpa_data <- function(caa_url, waa_url, maa_url, M) {
 function(req, res) {
     log_info("POST /v0/vpa - Request received")
 
-    # Validate request
-    body <- jsonlite::fromJSON(req$postBody)
-    req_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
-    log_debug("Request body: {req_json}")
-
-    if (!jsonvalidate::json_validate(req_json, vpa_request_schema)) {
-      log_warn("POST /v0/vpa - Request validation failed")
-      res$status <- 400
-      return(list(error = "Invalid request: data with caa_url, waa_url, maa_url required"))
-    }
-
-    log_info("POST /v0/vpa - Request validation passed")
-
-    data <- body$data
-    params <- body$params %||% list()
-    log_debug("VPA parameters: m={params$m}, fc_year={paste(params$fc_year, collapse=',')}")
-
     tryCatch({
+      # Parse and validate request
+      body <- jsonlite::fromJSON(req$postBody)
+      req_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
+      log_debug(sprintf("Request body: %d bytes", nchar(req_json)))
+
+      if (!jsonvalidate::json_validate(req_json, vpa_request_schema)) {
+        log_warn("POST /v0/vpa - Request validation failed")
+        res$status <- 400
+        return(list(error = "Invalid request: data with caa_url, waa_url, maa_url required"))
+      }
+
+      log_info("POST /v0/vpa - Request validation passed")
+
+      data <- body$data
+      params <- body$params %||% list()
+      log_debug(sprintf("VPA parameters: m=%s", params$m %||% 0.5))
+
+      # VPA calculation
+      tryCatch({
       result_vpa <- vpa(
           load_vpa_data(
               data$caa_url,
@@ -141,18 +143,32 @@ function(req, res) {
 
       log_debug(sprintf("Response: %d bytes", nchar(jsonlite::toJSON(result))))
       return(result)
+      }, error = function(e) {
+        # Handle VPAError with specific status code
+        if (inherits(e, "VPAError")) {
+          log_warn(sprintf("POST /v0/vpa - VPA error (%d): %s", e$status_code, e$message))
+          res$status <- e$status_code
+          return(list(error = e$message))
+        }
+        # Default error handling
+        else {
+          log_warn(sprintf("POST /v0/vpa - Unexpected error: %s", e$message))
+          res$status <- 500
+          return(list(error = "Internal server error"))
+        }
+      })
     }, error = function(e) {
-      # Handle VPAError with specific status code
-      if (inherits(e, "VPAError")) {
-        log_warn(sprintf("POST /v0/vpa - VPA error (%d): %s", e$status_code, e$message))
-        res$status <- e$status_code
-        return(list(error = e$message))
+      # JSON parsing error handler
+      if (grepl("JSON|parse", e$message, ignore.case = TRUE)) {
+        log_warn(sprintf("POST /v0/vpa - JSON parsing error: %s", e$message))
+        res$status <- 400
+        return(list(error = "Invalid JSON in request body"))
       }
-      # Default error handling
+      # Other request errors
       else {
-        log_warn(sprintf("POST /v0/vpa - Unexpected error: %s", e$message))
-        res$status <- 500
-        return(list(error = "Internal server error"))
+        log_warn(sprintf("POST /v0/vpa - Request error: %s", e$message))
+        res$status <- 400
+        return(list(error = "Bad Request"))
       }
     })
 }
