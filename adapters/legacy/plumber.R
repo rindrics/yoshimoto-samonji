@@ -69,32 +69,38 @@ function(req, res) {
     params <- body$params %||% list()
     log_debug("VPA parameters: m={params$m}, fc_year={paste(params$fc_year, collapse=',')}")
 
-    result_vpa <- vpa(
-        data.handler(
-            caa = read.csv(data$caa_url, row.names = 1),
-            waa = read.csv(data$waa_url, row.names = 1),
-            maa = read.csv(data$maa_url, row.names = 1),
-            M   = as.numeric(params$m %||% 0.5)
-        ),
-        fc.year = params$fc_year %||% 2015:2017,
-        tf.year = params$tf_year %||% 2015:2016,
-        term.F  = params$term_f %||% "max",
-        stat.tf = params$stat_tf %||% "mean",
-        Pope    = params$pope %||% TRUE,
-        tune    = params$tune %||% FALSE,
-        p.init  = params$p_init %||% 0.5
-    )
-    wcaa <- as.data.frame(result_vpa$wcaa)
-    result <- setNames(
-        lapply(seq_len(nrow(wcaa)), function(i) {
-        x <- unlist(wcaa[i, ], use.names = FALSE)
-        names(x) <- colnames(wcaa)
-        as.list(x)
-      }),
-      paste0("age", seq_len(nrow(wcaa)) - 1)
-    )
+    tryCatch({
+      result_vpa <- vpa(
+          data.handler(
+              caa = read.csv(data$caa_url, row.names = 1),
+              waa = read.csv(data$waa_url, row.names = 1),
+              maa = read.csv(data$maa_url, row.names = 1),
+              M   = as.numeric(params$m %||% 0.5)
+          ),
+          fc.year = params$fc_year %||% 2015:2017,
+          tf.year = params$tf_year %||% 2015:2016,
+          term.F  = params$term_f %||% "max",
+          stat.tf = params$stat_tf %||% "mean",
+          Pope    = params$pope %||% TRUE,
+          tune    = params$tune %||% FALSE,
+          p.init  = params$p_init %||% 0.5
+      )
+      wcaa <- as.data.frame(result_vpa$wcaa)
+      result <- setNames(
+          lapply(seq_len(nrow(wcaa)), function(i) {
+          x <- unlist(wcaa[i, ], use.names = FALSE)
+          names(x) <- colnames(wcaa)
+          as.list(x)
+        }),
+        paste0("age", seq_len(nrow(wcaa)) - 1)
+      )
 
-    log_info("POST /v0/vpa - VPA calculation completed")
+      log_info("POST /v0/vpa - VPA calculation completed")
+    }, error = function(e) {
+      log_warn("POST /v0/vpa - VPA calculation failed: {e$message}")
+      res$status <- 400
+      return(list(error = sprintf("VPA calculation failed: %s", e$message)))
+    })
 
     # Validate response (dev only)
     if (Sys.getenv("VALIDATE_RESPONSE", "false") == "true") {
