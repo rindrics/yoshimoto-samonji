@@ -148,7 +148,7 @@ function(req, res) {
         if (inherits(e, "VPAError")) {
           log_warn(sprintf("POST /v0/vpa - VPA error (%d): %s", e$status_code, e$message))
           res$status <- e$status_code
-          return(list(error = e$message))
+          return(list(error = as.character(e$message)))
         }
         # Default error handling
         else {
