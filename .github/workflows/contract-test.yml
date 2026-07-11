@@ -52,6 +52,11 @@ jobs:
           docker network ls | grep -i vpa || echo "No VPA network found"
           docker ps
 
+      - name: Prepare test directories
+        run: |
+          mkdir -p .schemathesis .hypothesis
+          chmod 777 .schemathesis .hypothesis
+
       - name: Run contract tests
         run: |
           make -C adapters/legacy test
