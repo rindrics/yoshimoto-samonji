@@ -1,7 +1,7 @@
 FROM rocker/tidyverse:4.5.2
 
-LABEL org.opencontainers.image.authors="Rindrics <dev+yoshimoto-samonji@rindrics.com>"
-LABEL org.opencontainers.image.source="https://github.com/Rindrics/yoshimoto-samonji"
+LABEL org.opencontainers.image.authors="rindrics <dev+yoshimoto-samonji@rindrics.com>"
+LABEL org.opencontainers.image.source="https://github.com/rindrics/yoshimoto-samonji"
 
 WORKDIR /app
 

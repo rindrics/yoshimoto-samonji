@@ -5,8 +5,8 @@ info:
   title: Stock Assessment API
   version: 0.1.0
   contact:
-    name: Rindrics
-    url: https://github.com/Rindrics/yoshimoto-samonji
+    name: rindrics
+    url: https://github.com/rindrics/yoshimoto-samonji
     email: dev+yoshimoto-samonji@rindrics.com
   license:
     name: MIT
