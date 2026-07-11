@@ -56,18 +56,26 @@ load_vpa_data <- function(caa_url, waa_url, maa_url, M) {
       M = as.numeric(M)
     )
   }, error = function(e) {
+    error_msg <- e$message
+    status_code <- 409  # default
+
     # 404: File not found (URL unreachable)
-    if (grepl("cannot open the connection|HTTP error|404", e$message, ignore.case = TRUE)) {
-      stop(VPAError(sprintf("Failed to download file: %s", e$message), 404))
+    if (grepl("cannot open the connection|HTTP error|404", error_msg, ignore.case = TRUE)) {
+      status_code <- 404
+      error_msg <- sprintf("Failed to download file: %s", error_msg)
     }
     # 409: Data format or processing error
-    else if (grepl("col.names|row.names|invalid|incompatible", e$message, ignore.case = TRUE)) {
-      stop(VPAError(sprintf("Data format error: %s", e$message), 409))
+    else if (grepl("col.names|row.names|invalid|incompatible", error_msg, ignore.case = TRUE)) {
+      status_code <- 409
+      error_msg <- sprintf("Data format error: %s", error_msg)
     }
     # Default: 409 Conflict
     else {
-      stop(VPAError(sprintf("Data processing error: %s", e$message), 409))
+      status_code <- 409
+      error_msg <- sprintf("Data processing error: %s", error_msg)
     }
+
+    stop(VPAError(error_msg, status_code))
   })
 }
 
@@ -90,14 +98,35 @@ function(req, res) {
       # Parse and validate request
       log_debug(sprintf("Request postBody length: %d bytes", nchar(req$postBody)))
 
-      if (nchar(req$postBody) == 0) {
-        log_warn("POST /v0/vpa - Empty request body")
+      # Check for empty or null-byte-only request body
+      if (nchar(req$postBody) == 0 || grepl("^\\x00+$", req$postBody)) {
+        log_warn("POST /v0/vpa - Empty or null-byte request body")
         res$status <- 400
-        res$body <- jsonlite::toJSON(list(error = "Empty request body"))
+        return(list(error = "Empty request body"))
+      }
+
+      log_debug("Attempting JSON parse...")
+      body <- tryCatch(
+        {
+          log_debug("Calling jsonlite::fromJSON")
+          jsonlite::fromJSON(req$postBody)
+        },
+        error = function(e) {
+          log_warn(sprintf("JSON parse error caught: %s", e$message))
+          list(parsing_error = TRUE, message = e$message)
+        }
+      )
+      log_debug("JSON parse completed")
+
+      if (isTRUE(body$parsing_error)) {
+        raw_preview <- substr(req$postBody, 1, 100)
+        log_warn(sprintf("POST /v0/vpa - JSON parsing error: %s", body$message))
+        log_debug(sprintf("Raw body preview (first 100 chars): %s", raw_preview))
+        res$status <- 400
+        res$body <- jsonlite::toJSON(list(error = "Invalid JSON in request body"))
         return()
       }
 
-      body <- jsonlite::fromJSON(req$postBody)
       req_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
       log_debug(sprintf("Request body: %d bytes", nchar(req_json)))
 
@@ -113,15 +142,17 @@ function(req, res) {
       params <- body$params %||% list()
       log_debug(sprintf("VPA parameters: m=%s", params$m %||% 0.5))
 
-      # VPA calculation
-      tryCatch({
-      result_vpa <- vpa(
-          load_vpa_data(
+      # Load and validate data (throws VPAError on failure)
+      vpa_data <- load_vpa_data(
               data$caa_url,
               data$waa_url,
               data$maa_url,
               M = params$m %||% 0.5
-          ),
+          )
+
+      # VPA calculation
+      result_vpa <- vpa(
+          vpa_data,
           fc.year = params$fc_year %||% 2015:2017,
           tf.year = params$tf_year %||% 2015:2016,
           term.F  = params$term_f %||% "max",
@@ -150,34 +181,29 @@ function(req, res) {
         }
       }
 
-      log_debug(sprintf("Response: %d bytes", nchar(jsonlite::toJSON(result))))
+      log_info(paste("VPA success"))
+      res$status <- 200
       return(result)
-      }, error = function(e) {
-        # Handle VPAError with specific status code
-        if (inherits(e, "VPAError")) {
-          log_warn(sprintf("POST /v0/vpa - VPA error (%d): %s", e$status_code, e$message))
-          res$status <- e$status_code
-          return(list(error = as.character(e$message)))
-        }
-        # Default error handling
-        else {
-          log_warn(sprintf("POST /v0/vpa - Unexpected error: %s", e$message))
-          res$status <- 500
-          return(list(error = "Internal server error"))
-        }
-      })
     }, error = function(e) {
+      # Handle VPAError with specific status code
+      if (inherits(e, "VPAError")) {
+        log_warn(sprintf("POST /v0/vpa - VPA error (%d): %s", e$status_code, e$message))
+        res$status <- e$status_code
+        return(list(error = e$message))
+      }
       # JSON parsing error handler
-      if (grepl("JSON|parse", e$message, ignore.case = TRUE)) {
+      else if (grepl("JSON|parse", e$message, ignore.case = TRUE)) {
         log_warn(sprintf("POST /v0/vpa - JSON parsing error: %s", e$message))
         res$status <- 400
         return(list(error = "Invalid JSON in request body"))
       }
-      # Other request errors
+      # Other errors
       else {
-        log_warn(sprintf("POST /v0/vpa - Request error: %s", e$message))
-        res$status <- 400
-        return(list(error = "Bad Request"))
+        log_warn(sprintf("POST /v0/vpa - Unexpected error: %s", e$message))
+        res$status <- 500
+        return(list(error = "Internal server error"))
       }
     })
+    # Ensure function exits - tryCatch may not fully exit
+    return(NULL)
 }
