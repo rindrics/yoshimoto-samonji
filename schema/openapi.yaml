@@ -42,6 +42,44 @@ paths:
                   "1989": 6345.67
                   "1990": 7456.78
                   "1991": 4567.89
+        "400":
+          description: Bad Request - Invalid JSON or request format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    oneOf:
+                      - type: string
+                      - type: array
+                        items:
+                          type: string
+                    description: Error message(s) describing the validation failure
+        "404":
+          description: Not Found - Failed to download CSV files from URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    oneOf:
+                      - type: string
+                      - type: array
+                        items:
+                          type: string
+                    description: Error message(s) indicating file download failure
+        "409":
+          description: Conflict - Data format error or processing incompatibility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing data format or processing issue
       requestBody:
         required: true
         content:
