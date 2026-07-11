@@ -42,6 +42,7 @@ jobs:
           PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
           VALIDATE_RESPONSE: "true"
           GIT_COMMIT: ${{ github.sha }}
+          COMPOSE_PROJECT_NAME: yoshimoto-samonji
         run: |
           make docker-up
           sleep 5

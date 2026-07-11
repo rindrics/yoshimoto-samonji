@@ -7,9 +7,8 @@ DREDD_LOG_LEVEL ?= warning
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
 BUILD_IMAGE ?= $(LOCAL_IMAGE)
 GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
-# Get repo name from git or directory name
-REPO_NAME ?= $(shell git rev-parse --show-toplevel 2>/dev/null | xargs basename || basename $$(pwd)/../..)
-DOCKER_NETWORK := $(REPO_NAME)_yoshimoto-samonji
+COMPOSE_PROJECT_NAME ?= yoshimoto_samonji
+DOCKER_NETWORK := $(COMPOSE_PROJECT_NAME)_yoshimoto-samonji
 
 help:
 	@echo "Available targets:"
