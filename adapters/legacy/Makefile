@@ -7,7 +7,7 @@ DREDD_LOG_LEVEL ?= warning
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
 BUILD_IMAGE ?= $(LOCAL_IMAGE)
 GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
-COMPOSE_PROJECT_NAME ?= yoshimoto_samonji
+COMPOSE_PROJECT_NAME ?= yoshimoto-samonji
 DOCKER_NETWORK := $(COMPOSE_PROJECT_NAME)_yoshimoto-samonji
 
 help:

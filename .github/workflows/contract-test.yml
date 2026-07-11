@@ -42,7 +42,6 @@ jobs:
           PLUMBER_PORT: ${{ vars.PLUMBER_PORT || '8000' }}
           VALIDATE_RESPONSE: "true"
           GIT_COMMIT: ${{ github.sha }}
-          COMPOSE_PROJECT_NAME: yoshimoto-samonji
         run: |
           make docker-up
           sleep 5
@@ -60,6 +59,8 @@ jobs:
       - name: Run contract tests
         run: |
           make -C adapters/legacy test
+        env:
+          COMPOSE_PROJECT_NAME: yoshimoto-samonji
 
       - name: Upload test results
         if: always()
