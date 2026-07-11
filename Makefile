@@ -2,6 +2,12 @@
 
 PLUMBER_PORT ?= 8000
 
+# Support both 'docker compose' and 'docker-compose' commands
+DOCKER_COMPOSE := docker compose
+ifeq ($(shell command -v docker-compose 2>/dev/null && echo 1),1)
+  DOCKER_COMPOSE := docker-compose
+endif
+
 help:
 	@echo "Available targets:"
 	@echo "  make docker-build      - Build Docker image"
@@ -19,13 +25,13 @@ docker-build:
 	$(MAKE) -C adapters/legacy docker-build
 
 docker-up:
-	docker-compose up -d --no-build monolith
+	$(DOCKER_COMPOSE) up -d --no-build monolith
 
 docker-down:
-	docker-compose down
+	$(DOCKER_COMPOSE) down
 
 docker-logs:
-	docker-compose logs -f monolith
+	$(DOCKER_COMPOSE) logs -f monolith
 
 docker-clean:
 	docker image rm ghcr.io/rindrics/yoshimoto-samonji/monolith:latest || true

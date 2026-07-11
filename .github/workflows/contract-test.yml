@@ -52,7 +52,7 @@ jobs:
           VALIDATE_RESPONSE: "true"
           MONOLITH_IMAGE: souzasamonji-monolith:latest
         run: |
-          docker compose up -d monolith
+          make docker-up
           sleep 5
 
       - name: Run contract tests
@@ -72,4 +72,4 @@ jobs:
 
       - name: Stop services
         if: always()
-        run: docker compose down
+        run: make docker-down
