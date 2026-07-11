@@ -1,6 +1,7 @@
 services:
   monolith:
-    image: ghcr.io/rindrics/yoshimoto-samonji/monolith:main
+    image: ${MONOLITH_IMAGE:-yoshimotosamonji-monolith:latest}
+    pull_policy: ${PULL_POLICY:-never}
     ports:
       - "${PLUMBER_PORT}:${CONTAINER_PORT:-8000}"
     environment:
@@ -8,7 +9,7 @@ services:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     volumes:
       - ./adapters/legacy/R:/app/R
-      - ./schema:/app/../../schema
+      - ./schema:/app/schema
     networks:
       - yoshimoto-samonji
 

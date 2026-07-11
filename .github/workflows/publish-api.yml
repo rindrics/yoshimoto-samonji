@@ -42,6 +42,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -55,6 +56,6 @@ jobs:
         run: |
           while IFS= read -r tag; do
             echo "Pushing $tag"
-            docker tag ghcr.io/rindrics/yoshimoto-samonji/monolith:latest "$tag"
+            docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest "$tag"
             docker push "$tag"
           done <<< "${{ steps.meta.outputs.tags }}"
