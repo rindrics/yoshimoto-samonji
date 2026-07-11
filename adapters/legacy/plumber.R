@@ -37,6 +37,40 @@ vpa_request_schema <- jsonlite::toJSON(
   auto_unbox = TRUE
 )
 
+# Custom error class for VPA errors with status code
+VPAError <- function(message, status_code = 409) {
+  structure(
+    list(message = message, status_code = status_code),
+    class = c("VPAError", "error", "condition")
+  )
+}
+
+# Helper function to load data files with error handling
+load_vpa_data <- function(caa_url, waa_url, maa_url, M) {
+  tryCatch({
+    log_debug(sprintf("Loading CSV files: caa=%s, waa=%s, maa=%s", caa_url, waa_url, maa_url))
+    data.handler(
+      caa = read.csv(caa_url, row.names = 1),
+      waa = read.csv(waa_url, row.names = 1),
+      maa = read.csv(maa_url, row.names = 1),
+      M = as.numeric(M)
+    )
+  }, error = function(e) {
+    # 404: File not found (URL unreachable)
+    if (grepl("cannot open the connection|HTTP error|404", e$message, ignore.case = TRUE)) {
+      stop(VPAError(sprintf("Failed to download file: %s", e$message), 404))
+    }
+    # 409: Data format or processing error
+    else if (grepl("col.names|row.names|invalid|incompatible", e$message, ignore.case = TRUE)) {
+      stop(VPAError(sprintf("Data format error: %s", e$message), 409))
+    }
+    # Default: 409 Conflict
+    else {
+      stop(VPAError(sprintf("Data processing error: %s", e$message), 409))
+    }
+  })
+}
+
 #* @apiTitle Stock Assessment API
 #* @apiDescription API for stock assessment calculation using ichimomo/frasyr
 #* @apiVersion 0.1.0
@@ -71,11 +105,11 @@ function(req, res) {
 
     tryCatch({
       result_vpa <- vpa(
-          data.handler(
-              caa = read.csv(data$caa_url, row.names = 1),
-              waa = read.csv(data$waa_url, row.names = 1),
-              maa = read.csv(data$maa_url, row.names = 1),
-              M   = as.numeric(params$m %||% 0.5)
+          load_vpa_data(
+              data$caa_url,
+              data$waa_url,
+              data$maa_url,
+              M = params$m %||% 0.5
           ),
           fc.year = params$fc_year %||% 2015:2017,
           tf.year = params$tf_year %||% 2015:2016,
@@ -96,20 +130,29 @@ function(req, res) {
       )
 
       log_info("POST /v0/vpa - VPA calculation completed")
-    }, error = function(e) {
-      log_warn("POST /v0/vpa - VPA calculation failed: {e$message}")
-      res$status <- 400
-      return(list(error = sprintf("VPA calculation failed: %s", e$message)))
-    })
 
-    # Validate response (dev only)
-    if (Sys.getenv("VALIDATE_RESPONSE", "false") == "true") {
-      res_json <- jsonlite::toJSON(result, auto_unbox = TRUE)
-      if (!jsonvalidate::json_validate(res_json, "{}")) {
-        log_warn("Response validation failed for VPA endpoint")
+      # Validate response (dev only)
+      if (Sys.getenv("VALIDATE_RESPONSE", "false") == "true") {
+        res_json <- jsonlite::toJSON(result, auto_unbox = TRUE)
+        if (!jsonvalidate::json_validate(res_json, "{}")) {
+          log_warn("Response validation failed for VPA endpoint")
+        }
       }
-    }
 
-    log_debug("Response: {nchar(jsonlite::toJSON(result))} bytes")
-    return(result)
+      log_debug(sprintf("Response: %d bytes", nchar(jsonlite::toJSON(result))))
+      return(result)
+    }, error = function(e) {
+      # Handle VPAError with specific status code
+      if (inherits(e, "VPAError")) {
+        log_warn(sprintf("POST /v0/vpa - VPA error (%d): %s", e$status_code, e$message))
+        res$status <- e$status_code
+        return(list(error = e$message))
+      }
+      # Default error handling
+      else {
+        log_warn(sprintf("POST /v0/vpa - Unexpected error: %s", e$message))
+        res$status <- 500
+        return(list(error = "Internal server error"))
+      }
+    })
 }
