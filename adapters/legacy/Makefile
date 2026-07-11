@@ -5,7 +5,7 @@ PLUMBER_PORT ?= 8000
 DREDD_LOG_LEVEL ?= info
 REGISTRY_IMAGE ?= ghcr.io/rindrics/yoshimoto-samonji/monolith
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
-GIT_COMMIT := $(shell git rev-parse --short HEAD)
+GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
 
 help:
 	@echo "Available targets:"

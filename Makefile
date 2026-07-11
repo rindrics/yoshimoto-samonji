@@ -2,7 +2,7 @@
 
 PLUMBER_PORT ?= 8000
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
-GIT_COMMIT := $(shell git rev-parse --short HEAD)
+GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
 
 # Support both 'docker compose' and 'docker-compose' commands
 DOCKER_COMPOSE := docker compose
