@@ -15,7 +15,7 @@ on:
       - 'adapters/legacy/**'
 
 env:
-  LOCAL_IMAGE: souzasamonji-monolith
+  LOCAL_IMAGE: yoshimotosamonji-monolith
 
 jobs:
   contract-test:

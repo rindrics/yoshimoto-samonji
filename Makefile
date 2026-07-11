@@ -1,7 +1,7 @@
 .PHONY: docker-build docker-up docker-down docker-logs docker-clean docker-clean-build help
 
 PLUMBER_PORT ?= 8000
-LOCAL_IMAGE ?= souzasamonji-monolith
+LOCAL_IMAGE ?= yoshimotosamonji-monolith
 GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # Support both 'docker compose' and 'docker-compose' commands
