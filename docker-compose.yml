@@ -9,7 +9,7 @@ services:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
     volumes:
       - ./adapters/legacy/R:/app/R
-      - ./schema:/app/../../schema
+      - ./schema:/app/schema
     networks:
       - yoshimoto-samonji
 
