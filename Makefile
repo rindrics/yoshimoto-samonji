@@ -1,6 +1,7 @@
 .PHONY: docker-build docker-up docker-down docker-logs docker-clean docker-clean-build help
 
 PLUMBER_PORT ?= 8000
+IMAGE_REPO ?= ghcr.io/rindrics/yoshimoto-samonji/monolith
 
 # Support both 'docker compose' and 'docker-compose' commands
 DOCKER_COMPOSE := docker compose
@@ -34,7 +35,7 @@ docker-logs:
 	$(DOCKER_COMPOSE) logs -f monolith
 
 docker-clean:
-	docker image rm ghcr.io/rindrics/yoshimoto-samonji/monolith:latest || true
+	docker image rm $(IMAGE_REPO):latest || true
 	docker builder prune -af
 
 docker-clean-build: docker-clean docker-build

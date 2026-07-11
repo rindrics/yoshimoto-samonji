@@ -56,6 +56,6 @@ jobs:
         run: |
           while IFS= read -r tag; do
             echo "Pushing $tag"
-            docker tag ghcr.io/rindrics/yoshimoto-samonji/monolith:latest "$tag"
+            docker tag ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest "$tag"
             docker push "$tag"
           done <<< "${{ steps.meta.outputs.tags }}"

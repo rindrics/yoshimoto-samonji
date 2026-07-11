@@ -3,6 +3,7 @@
 LOG_LEVEL ?= DEBUG
 PLUMBER_PORT ?= 8000
 DREDD_LOG_LEVEL ?= info
+IMAGE_REPO ?= ghcr.io/rindrics/yoshimoto-samonji/monolith
 
 help:
 	@echo "Available targets:"
@@ -23,7 +24,7 @@ dredd:
 	pnpm exec dredd ../../schema/openapi.yaml http://localhost:$(PLUMBER_PORT) --loglevel=$(DREDD_LOG_LEVEL)
 
 docker-build:
-	docker build --no-cache -t ghcr.io/rindrics/yoshimoto-samonji/monolith:latest ./
+	docker build --no-cache -t $(IMAGE_REPO):latest ./
 
 clean:
 	find . -name "*.Rhistory" -delete
