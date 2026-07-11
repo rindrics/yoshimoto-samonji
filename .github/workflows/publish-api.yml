@@ -51,6 +51,8 @@ jobs:
       - name: Build Docker image
         run: make docker-build
         working-directory: ./adapters/legacy
+        env:
+          BUILD_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Tag and push Docker image
         run: |
