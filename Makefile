@@ -1,7 +1,8 @@
 .PHONY: docker-build docker-up docker-down docker-logs docker-clean docker-clean-build help
 
 PLUMBER_PORT ?= 8000
-IMAGE_REPO ?= ghcr.io/rindrics/yoshimoto-samonji/monolith
+LOCAL_IMAGE ?= souzasamonji-monolith
+GIT_COMMIT := $(shell git rev-parse --short HEAD)
 
 # Support both 'docker compose' and 'docker-compose' commands
 DOCKER_COMPOSE := docker compose
@@ -26,7 +27,7 @@ docker-build:
 	$(MAKE) -C adapters/legacy docker-build
 
 docker-up:
-	$(DOCKER_COMPOSE) up -d --no-build monolith
+	MONOLITH_IMAGE=$(LOCAL_IMAGE):$(GIT_COMMIT) $(DOCKER_COMPOSE) up -d --no-build monolith
 
 docker-down:
 	$(DOCKER_COMPOSE) down
@@ -35,7 +36,7 @@ docker-logs:
 	$(DOCKER_COMPOSE) logs -f monolith
 
 docker-clean:
-	docker image rm $(IMAGE_REPO):latest || true
+	docker image rm $(LOCAL_IMAGE):$(GIT_COMMIT) $(LOCAL_IMAGE):latest || true
 	docker builder prune -af
 
 docker-clean-build: docker-clean docker-build
