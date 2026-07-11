@@ -88,6 +88,15 @@ function(req, res) {
 
     tryCatch({
       # Parse and validate request
+      log_debug(sprintf("Request postBody length: %d bytes", nchar(req$postBody)))
+
+      if (nchar(req$postBody) == 0) {
+        log_warn("POST /v0/vpa - Empty request body")
+        res$status <- 400
+        res$body <- jsonlite::toJSON(list(error = "Empty request body"))
+        return()
+      }
+
       body <- jsonlite::fromJSON(req$postBody)
       req_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
       log_debug(sprintf("Request body: %d bytes", nchar(req_json)))
