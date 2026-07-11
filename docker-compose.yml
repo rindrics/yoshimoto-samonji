@@ -1,6 +1,7 @@
 services:
   monolith:
-    image: ${MONOLITH_IMAGE:-${IMAGE_REPO:-ghcr.io/rindrics/yoshimoto-samonji/monolith}:latest}
+    image: ${MONOLITH_IMAGE:-yoshimotosamonji-monolith:latest}
+    pull_policy: ${PULL_POLICY:-never}
     ports:
       - "${PLUMBER_PORT}:${CONTAINER_PORT:-8000}"
     environment:
