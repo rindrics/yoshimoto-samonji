@@ -31,7 +31,7 @@ test:
 	  --network $(DOCKER_NETWORK) \
 	  -v $$(pwd)/../../schema:/schema \
 	  -v $$(pwd)/../..:/workspace \
-	  -w /workspace \
+	  -w /workspace/.schemathesis \
 	  ghcr.io/schemathesis/schemathesis:stable \
 	  run /schema/openapi.yaml \
 	  --url http://monolith:$(CONTAINER_PORT) \
