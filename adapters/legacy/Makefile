@@ -3,8 +3,8 @@
 LOG_LEVEL ?= DEBUG
 PLUMBER_PORT ?= 8000
 DREDD_LOG_LEVEL ?= warning
-REGISTRY_IMAGE ?= ghcr.io/rindrics/yoshimoto-samonji/monolith
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
+BUILD_IMAGE ?= $(LOCAL_IMAGE)
 GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
 
 help:
@@ -26,7 +26,7 @@ dredd:
 	pnpm exec dredd ../../schema/openapi.yaml http://localhost:$(PLUMBER_PORT) --loglevel=$(DREDD_LOG_LEVEL)
 
 docker-build:
-	docker build --no-cache -t $(LOCAL_IMAGE):$(GIT_COMMIT) -t $(LOCAL_IMAGE):latest ./
+	docker build --no-cache -t $(BUILD_IMAGE):$(GIT_COMMIT) -t $(BUILD_IMAGE):latest ./
 
 clean:
 	find . -name "*.Rhistory" -delete
