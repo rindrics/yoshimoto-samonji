@@ -131,7 +131,7 @@ validate_year_array <- function(value, param_name, raw_json) {
   if (is.null(value)) return(NULL)
 
   # Check for array syntax in raw JSON
-  is_array <- grepl(sprintf('"%.s"\\s*:\\s*\\[', param_name), raw_json)
+  is_array <- grepl(sprintf('"%s"\\s*:\\s*\\[', param_name), raw_json)
   if (!is_array || !is.numeric(value) || length(value) == 0 || !all(value == as.integer(value))) {
     return(list(error = sprintf("Invalid parameter: %s must be an array of integers", param_name), status = 400))
   }
@@ -156,6 +156,107 @@ validate_enum <- function(value, param_name, allowed_values, required = FALSE) {
     }
   }
   NULL
+}
+
+# Validate VPA request parameters
+validate_vpa_params <- function(body, raw_json) {
+  # Validate body is an object
+  if (!is.list(body) || is.null(names(body)) || length(names(body)) == 0) {
+    return(list(valid = FALSE, error = "Invalid request: body must be a JSON object", status = 400))
+  }
+
+  data <- body$data
+  params <- body$params %||% list()
+
+  # Validate data structure
+  if (is.null(data) || !is.list(data) || is.data.frame(data)) {
+    return(list(valid = FALSE, error = "Invalid parameter: data must be an object", status = 400))
+  }
+
+  if ("params" %in% names(body) && is.null(body$params)) {
+    return(list(valid = FALSE, error = "Invalid parameter: params must be an object, not null", status = 400))
+  }
+
+  if (!is.null(body$params) && !is.list(body$params)) {
+    return(list(valid = FALSE, error = "Invalid parameter: params must be an object", status = 400))
+  }
+
+  # Validate unexpected properties
+  unexpected_in_body <- setdiff(names(body), c("data", "params"))
+  if (length(unexpected_in_body) > 0) {
+    return(list(valid = FALSE, error = sprintf("Invalid request: unexpected properties: %s", paste(unexpected_in_body, collapse = ", ")), status = 400))
+  }
+
+  unexpected_in_data <- setdiff(names(data), c("caa_url", "waa_url", "maa_url"))
+  if (length(unexpected_in_data) > 0) {
+    return(list(valid = FALSE, error = sprintf("Invalid parameter: unexpected properties in data: %s", paste(unexpected_in_data, collapse = ", ")), status = 400))
+  }
+
+  expected_params_props <- c("m", "fc_year", "tf_year", "term_f", "stat_tf", "pope", "tune", "p_init", "sel_update", "sel_f", "alpha", "max_dd", "abund", "min_age", "max_age")
+  unexpected_in_params <- setdiff(names(params), expected_params_props)
+  if (length(unexpected_in_params) > 0) {
+    return(list(valid = FALSE, error = sprintf("Invalid parameter: unexpected properties in params: %s", paste(unexpected_in_params, collapse = ", ")), status = 400))
+  }
+
+  # Validate data URLs
+  for (url_param in c("caa_url", "waa_url", "maa_url")) {
+    err <- validate_url(data[[url_param]], url_param)
+    if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+  }
+
+  # Validate numeric parameters
+  if ("m" %in% names(params) && is.null(params$m)) {
+    return(list(valid = FALSE, error = "Invalid parameter: m must be a numeric value", status = 400))
+  }
+  err <- validate_numeric(params$m, "m")
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  if ("p_init" %in% names(params) && is.null(params$p_init)) {
+    return(list(valid = FALSE, error = "Invalid parameter: p_init must be a numeric value", status = 400))
+  }
+  err <- validate_numeric(params$p_init, "p_init")
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  # Validate boolean parameters
+  if ("pope" %in% names(params) && is.null(params$pope)) {
+    return(list(valid = FALSE, error = "Invalid parameter: pope must be boolean", status = 400))
+  }
+  err <- validate_logical(params$pope, "pope")
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  if ("tune" %in% names(params) && is.null(params$tune)) {
+    return(list(valid = FALSE, error = "Invalid parameter: tune must be boolean", status = 400))
+  }
+  err <- validate_logical(params$tune, "tune", must_be_false = TRUE)
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  # Validate year arrays
+  if ("fc_year" %in% names(params) && is.null(params$fc_year)) {
+    return(list(valid = FALSE, error = "Invalid parameter: fc_year must be an array of integers", status = 400))
+  }
+  err <- validate_year_array(params$fc_year, "fc_year", raw_json)
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  if ("tf_year" %in% names(params) && is.null(params$tf_year)) {
+    return(list(valid = FALSE, error = "Invalid parameter: tf_year must be an array of integers", status = 400))
+  }
+  err <- validate_year_array(params$tf_year, "tf_year", raw_json)
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  # Validate string enum parameters
+  if ("term_f" %in% names(params) && is.null(params$term_f)) {
+    return(list(valid = FALSE, error = "Invalid parameter: term_f must be a string value", status = 400))
+  }
+  err <- validate_enum(params$term_f, "term_f", c("max", "mean"))
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  if ("stat_tf" %in% names(params) && is.null(params$stat_tf)) {
+    return(list(valid = FALSE, error = "Invalid parameter: stat_tf must be a string value", status = 400))
+  }
+  err <- validate_enum(params$stat_tf, "stat_tf", c("mean", "median", "max", "min"))
+  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+
+  list(valid = TRUE)
 }
 
 # Helper function to load data files with error handling
@@ -213,7 +314,7 @@ function(req, res) {
     log_info("POST /v0/vpa - Request received")
 
     tryCatch({
-      # Parse and validate request
+      # Parse request
       log_debug(sprintf("Request postBody length: %d bytes", nchar(req$postBody)))
 
       if (nchar(req$postBody) == 0) {
@@ -226,79 +327,15 @@ function(req, res) {
       body <- jsonlite::fromJSON(req$postBody)
       log_debug(sprintf("Request body parsed successfully"))
 
-      # Validate body is an object
-      if (!is.list(body) || is.null(names(body)) || length(names(body)) == 0) {
-        res$status <- 400
-        return(list(error = "Invalid request: body must be a JSON object"))
+      # Validate request
+      val <- validate_vpa_params(body, req$postBody)
+      if (!val$valid) {
+        res$status <- val$status
+        return(list(error = val$error))
       }
 
       data <- body$data
       params <- body$params %||% list()
-
-      # Validate data structure
-      if (is.null(data) || !is.list(data) || is.data.frame(data)) {
-        res$status <- 400
-        return(list(error = "Invalid parameter: data must be an object"))
-      }
-
-      if ("params" %in% names(body) && is.null(body$params)) {
-        res$status <- 400
-        return(list(error = "Invalid parameter: params must be an object, not null"))
-      }
-
-      # Validate unexpected properties
-      unexpected_in_body <- setdiff(names(body), c("data", "params"))
-      if (length(unexpected_in_body) > 0) {
-        res$status <- 400
-        return(list(error = sprintf("Invalid request: unexpected properties: %s", paste(unexpected_in_body, collapse = ", "))))
-      }
-
-      unexpected_in_data <- setdiff(names(data), c("caa_url", "waa_url", "maa_url"))
-      if (length(unexpected_in_data) > 0) {
-        res$status <- 400
-        return(list(error = sprintf("Invalid parameter: unexpected properties in data: %s", paste(unexpected_in_data, collapse = ", "))))
-      }
-
-      expected_params_props <- c("m", "fc_year", "tf_year", "term_f", "stat_tf", "pope", "tune", "p_init", "sel_update", "sel_f", "alpha", "max_dd", "abund", "min_age", "max_age")
-      unexpected_in_params <- setdiff(names(params), expected_params_props)
-      if (length(unexpected_in_params) > 0) {
-        res$status <- 400
-        return(list(error = sprintf("Invalid parameter: unexpected properties in params: %s", paste(unexpected_in_params, collapse = ", "))))
-      }
-
-      # Validate data URLs
-      for (url_param in c("caa_url", "waa_url", "maa_url")) {
-        err <- validate_url(data[[url_param]], url_param)
-        if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-      }
-
-      # Validate numeric parameters (with positive constraint)
-      err <- validate_numeric(params$m, "m")
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-
-      err <- validate_numeric(params$p_init, "p_init")
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-
-      # Validate boolean parameters
-      err <- validate_logical(params$pope, "pope")
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-
-      err <- validate_logical(params$tune, "tune", must_be_false = TRUE)
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-
-      # Validate year arrays
-      err <- validate_year_array(params$fc_year, "fc_year", req$postBody)
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-
-      err <- validate_year_array(params$tf_year, "tf_year", req$postBody)
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-
-      # Validate string enum parameters
-      err <- validate_enum(params$term_f, "term_f", c("max", "mean"))
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
-
-      err <- validate_enum(params$stat_tf, "stat_tf", c("mean", "median", "max", "min"))
-      if (!is.null(err)) { res$status <- err$status; return(list(error = err$error)) }
 
       # Load and validate data (throws VPAError on failure)
       vpa_data <- load_vpa_data(
