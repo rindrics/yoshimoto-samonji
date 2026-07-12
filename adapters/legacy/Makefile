@@ -27,7 +27,7 @@ help:
 	@echo "  make docker-build && make test"
 
 run:
-	LOG_LEVEL=$(LOG_LEVEL) OPENAPI_SPEC_PATH=../../schema/openapi.yaml PLUMBER_PORT=$(PLUMBER_DEV_PORT) Rscript run.R
+	VALIDATE_RESPONSE=true LOG_LEVEL=$(LOG_LEVEL) OPENAPI_SPEC_PATH=../../schema/openapi.yaml PLUMBER_PORT=$(PLUMBER_DEV_PORT) Rscript run.R
 
 test:
 	docker run --rm \

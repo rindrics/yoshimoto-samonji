@@ -36,7 +36,7 @@ docker-build:
 	$(MAKE) -C adapters/legacy docker-build
 
 docker-up:
-	MONOLITH_IMAGE=$(LOCAL_IMAGE):$(GIT_COMMIT) $(DOCKER_COMPOSE) up -d --no-build monolith
+	MONOLITH_IMAGE=$(LOCAL_IMAGE):$(GIT_COMMIT) VALIDATE_RESPONSE=$(VALIDATE_RESPONSE) $(DOCKER_COMPOSE) up -d --no-build monolith
 
 docker-down:
 	$(DOCKER_COMPOSE) down
