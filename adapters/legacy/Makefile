@@ -30,22 +30,22 @@ test:
 	docker run --rm \
 	  --network $(DOCKER_NETWORK) \
 	  -v $$(pwd)/../../schema:/schema \
+ 	  -v $$(pwd)/../../schemathesis.toml:/workspace/schemathesis.toml \
 	  -v $$(pwd)/../..:/workspace \
 	  -w /workspace/.schemathesis \
 	  ghcr.io/schemathesis/schemathesis:stable \
 	  run /schema/openapi.yaml \
-	  --url http://monolith:$(CONTAINER_PORT) \
-	  --max-examples=100
+	  --url http://monolith:$(CONTAINER_PORT)
 
 test-local:
 	docker run --rm \
 	  -v $$(pwd)/../../schema:/schema \
+	  -v $$(pwd)/../../schemathesis.toml:/workspace/schemathesis.toml \
 	  -v $$(pwd)/../..:/workspace \
 	  -w /workspace \
 	  ghcr.io/schemathesis/schemathesis:stable \
 	  run /schema/openapi.yaml \
-	  --url http://host.docker.internal:$(PLUMBER_DEV_PORT) \
-	  --max-examples=100
+	  --url http://host.docker.internal:$(PLUMBER_DEV_PORT)
 
 docker-build:
 	docker build --no-cache -t $(BUILD_IMAGE):$(GIT_COMMIT) -t $(BUILD_IMAGE):latest ./
