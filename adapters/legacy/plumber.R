@@ -158,6 +158,34 @@ validate_enum <- function(value, param_name, allowed_values, required = FALSE) {
   NULL
 }
 
+# Parameter specifications for table-driven validation
+PARAM_SPECS <- list(
+  list(name = "m", type = "numeric"),
+  list(name = "p_init", type = "numeric"),
+  list(name = "pope", type = "logical"),
+  list(name = "tune", type = "logical", must_be_false = TRUE),
+  list(name = "fc_year", type = "year_array"),
+  list(name = "tf_year", type = "year_array"),
+  list(name = "term_f", type = "enum", allowed_values = c("max", "mean")),
+  list(name = "stat_tf", type = "enum", allowed_values = c("mean", "median", "max", "min"))
+)
+
+# Validate a single parameter based on its specification
+validate_param <- function(param_name, param_value, spec, raw_json) {
+  # Explicitly specified null values are invalid
+  if (!is.null(param_value)) {
+    switch(spec$type,
+      "numeric" = validate_numeric(param_value, param_name),
+      "logical" = validate_logical(param_value, param_name, must_be_false = isTRUE(spec$must_be_false)),
+      "year_array" = validate_year_array(param_value, param_name, raw_json),
+      "enum" = validate_enum(param_value, param_name, spec$allowed_values),
+      NULL
+    )
+  } else {
+    NULL
+  }
+}
+
 # Validate VPA request parameters
 validate_vpa_params <- function(body, raw_json) {
   # Validate body is an object
@@ -204,57 +232,20 @@ validate_vpa_params <- function(body, raw_json) {
     if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
   }
 
-  # Validate numeric parameters
-  if ("m" %in% names(params) && is.null(params$m)) {
-    return(list(valid = FALSE, error = "Invalid parameter: m must be a numeric value", status = 400))
-  }
-  err <- validate_numeric(params$m, "m")
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+  # Validate parameters (table-driven)
+  for (spec in PARAM_SPECS) {
+    param_name <- spec$name
+    param_value <- params[[param_name]]
 
-  if ("p_init" %in% names(params) && is.null(params$p_init)) {
-    return(list(valid = FALSE, error = "Invalid parameter: p_init must be a numeric value", status = 400))
-  }
-  err <- validate_numeric(params$p_init, "p_init")
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+    # Check for explicitly specified null values
+    if (param_name %in% names(params) && is.null(param_value)) {
+      return(list(valid = FALSE, error = sprintf("Invalid parameter: %s must be a valid value", param_name), status = 400))
+    }
 
-  # Validate boolean parameters
-  if ("pope" %in% names(params) && is.null(params$pope)) {
-    return(list(valid = FALSE, error = "Invalid parameter: pope must be boolean", status = 400))
+    # Validate parameter if present
+    err <- validate_param(param_name, param_value, spec, raw_json)
+    if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
   }
-  err <- validate_logical(params$pope, "pope")
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
-
-  if ("tune" %in% names(params) && is.null(params$tune)) {
-    return(list(valid = FALSE, error = "Invalid parameter: tune must be boolean", status = 400))
-  }
-  err <- validate_logical(params$tune, "tune", must_be_false = TRUE)
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
-
-  # Validate year arrays
-  if ("fc_year" %in% names(params) && is.null(params$fc_year)) {
-    return(list(valid = FALSE, error = "Invalid parameter: fc_year must be an array of integers", status = 400))
-  }
-  err <- validate_year_array(params$fc_year, "fc_year", raw_json)
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
-
-  if ("tf_year" %in% names(params) && is.null(params$tf_year)) {
-    return(list(valid = FALSE, error = "Invalid parameter: tf_year must be an array of integers", status = 400))
-  }
-  err <- validate_year_array(params$tf_year, "tf_year", raw_json)
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
-
-  # Validate string enum parameters
-  if ("term_f" %in% names(params) && is.null(params$term_f)) {
-    return(list(valid = FALSE, error = "Invalid parameter: term_f must be a string value", status = 400))
-  }
-  err <- validate_enum(params$term_f, "term_f", c("max", "mean"))
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
-
-  if ("stat_tf" %in% names(params) && is.null(params$stat_tf)) {
-    return(list(valid = FALSE, error = "Invalid parameter: stat_tf must be a string value", status = 400))
-  }
-  err <- validate_enum(params$stat_tf, "stat_tf", c("mean", "median", "max", "min"))
-  if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
 
   list(valid = TRUE)
 }
