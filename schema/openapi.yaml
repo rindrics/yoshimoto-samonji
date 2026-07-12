@@ -95,6 +95,7 @@ paths:
               minProperties: 1
               required:
                 - data
+              additionalProperties: true
               properties:
                 data:
                   type: object
@@ -103,6 +104,7 @@ paths:
                     - caa_url
                     - waa_url
                     - maa_url
+                  additionalProperties: true
                   properties:
                     caa_url:
                       type: string
