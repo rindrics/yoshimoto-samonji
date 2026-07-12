@@ -45,6 +45,60 @@ vpa_request_schema <- jsonlite::toJSON(
   auto_unbox = TRUE
 )
 
+# Extract response schema from OpenAPI spec
+extract_response_schema <- function(path, method, status_code) {
+  tryCatch(
+    {
+      method_lower <- tolower(method)
+      status_str <- as.character(status_code)
+
+      schema <- openapi_spec$paths[[path]][[method_lower]]$responses[[status_str]]$content$`application/json`$schema
+
+      if (is.null(schema)) {
+        log_warn(sprintf(
+          "Response schema not found: %s %s %s",
+          method, path, status_code
+        ))
+        return(NULL)
+      }
+
+      jsonlite::toJSON(schema, auto_unbox = TRUE)
+    },
+    error = function(e) {
+      log_warn(sprintf(
+        "Failed to extract response schema: %s",
+        e$message
+      ))
+      NULL
+    }
+  )
+}
+
+# Validate response against OpenAPI schema
+validate_response <- function(response, path, method, status_code) {
+  response_schema <- extract_response_schema(path, method, status_code)
+
+  if (is.null(response_schema)) {
+    log_warn(sprintf(
+      "Skipping response validation: schema not available for %s %s",
+      method, path
+    ))
+    return(TRUE)
+  }
+
+  response_json <- jsonlite::toJSON(response, auto_unbox = TRUE)
+  is_valid <- jsonvalidate::json_validate(response_json, response_schema)
+
+  if (!is_valid) {
+    log_error(sprintf(
+      "Response validation failed for %s %s",
+      method, path
+    ))
+  }
+
+  is_valid
+}
+
 # Custom error class for VPA errors with status code
 vpa_error <- function(message, status_code = 409) {
   structure(
@@ -532,11 +586,11 @@ function(req, res) {
 
       log_info("POST /v0/vpa - VPA calculation completed")
 
-      # Validate response (dev only)
+      # Validate response against OpenAPI schema
       if (Sys.getenv("VALIDATE_RESPONSE", "false") == "true") {
-        res_json <- jsonlite::toJSON(result, auto_unbox = TRUE)
-        if (!jsonvalidate::json_validate(res_json, "{}")) {
-          log_warn("Response validation failed for VPA endpoint")
+        if (!validate_response(result, "/v0/vpa", "POST", 200)) {
+          res$status <- 500
+          return(list(error = "Internal validation error"))
         }
       }
 

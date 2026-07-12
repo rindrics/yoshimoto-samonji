@@ -7,6 +7,7 @@ services:
     environment:
       PLUMBER_PORT: "${CONTAINER_PORT:-8000}"
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
+      VALIDATE_RESPONSE: "${VALIDATE_RESPONSE:-false}"
     volumes:
       - ./adapters/legacy/R:/app/R
       - ./schema:/app/schema
