@@ -1,4 +1,4 @@
-.PHONY: docker-build docker-up docker-down docker-logs docker-clean docker-clean-build prod-up prod-down prod-logs test help
+.PHONY: docker-build docker-up docker-down docker-logs docker-clean docker-clean-build prod-up prod-down prod-logs test setup format lint help
 
 PLUMBER_PORT ?= 8000
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
@@ -12,12 +12,15 @@ endif
 
 help:
 	@echo "Available targets (dev/CI):"
+	@echo "  make setup             - Install dev dependencies (air, lintr)"
 	@echo "  make docker-build      - Build Docker image"
 	@echo "  make docker-up         - Build and start containers"
 	@echo "  make docker-down       - Stop containers"
 	@echo "  make docker-logs       - View container logs"
 	@echo "  make docker-clean      - Remove image and build cache"
 	@echo "  make docker-clean-build - Clean and rebuild image"
+	@echo "  make format            - Format R code with air"
+	@echo "  make lint              - Lint R code with lintr"
 	@echo "  make test              - Run contract tests with Schemathesis"
 	@echo ""
 	@echo "Production targets:"
@@ -58,3 +61,12 @@ prod-logs:
 
 test:
 	$(MAKE) -C adapters/legacy test
+
+setup:
+	$(MAKE) -C adapters/legacy setup
+
+format:
+	$(MAKE) -C adapters/legacy format
+
+lint:
+	$(MAKE) -C adapters/legacy lint

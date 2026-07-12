@@ -1,4 +1,4 @@
-.PHONY: run docker-build test clean help
+.PHONY: run docker-build test clean setup format lint help
 
 LOG_LEVEL ?= DEBUG
 PLUMBER_PORT ?= 8000
@@ -12,9 +12,12 @@ DOCKER_NETWORK := $(COMPOSE_PROJECT_NAME)_yoshimoto-samonji
 
 help:
 	@echo "Available targets:"
+	@echo "  make setup        - Install dev dependencies (air, lintr)"
 	@echo "  make run          - Run plumber API locally (LOG_LEVEL=DEBUG by default)"
 	@echo "  make test         - Run contract tests with docker-compose (docker-up required)"
 	@echo "  make test-local   - Run contract tests against localhost (for 'make run')"
+	@echo "  make format       - Format R code with air"
+	@echo "  make lint         - Lint R code with lintr"
 	@echo "  make docker-build - Build Docker image"
 	@echo "  make clean        - Remove schema files"
 	@echo ""
@@ -52,3 +55,15 @@ docker-build:
 
 clean:
 	find . -name "*.Rhistory" -delete
+
+setup:
+	@echo "Installing dev dependencies..."
+	curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
+	Rscript -e "if (!require('lintr', quietly = TRUE)) install.packages('lintr')"
+	@echo "Dev dependencies installed"
+
+format:
+	air format .
+
+lint:
+	Rscript -e "lintr::lint_dir('.')"
