@@ -9,8 +9,8 @@ log_level <- Sys.getenv("LOG_LEVEL", "INFO")
 log_threshold(log_level)
 
 # VPA parameter constraints
-MINIMUM_YEAR <- 1950
-MAXIMUM_YEAR <- 2100
+minimum_year <- 1950
+maximum_year <- 2100
 
 # Load request schema from openapi.yaml (single source of truth)
 # Priority: env var > local path > docker path
@@ -32,7 +32,10 @@ resolve_schema_path <- function() {
     return(default_path)
   }
 
-  stop(sprintf("Cannot find schema at %s. Set OPENAPI_SPEC_PATH for custom path.", default_path))
+  stop(sprintf(
+    "Cannot find schema at %s. Set OPENAPI_SPEC_PATH for custom path.",
+    default_path
+  ))
 }
 
 schema_path <- resolve_schema_path()
@@ -43,10 +46,10 @@ vpa_request_schema <- jsonlite::toJSON(
 )
 
 # Custom error class for VPA errors with status code
-VPAError <- function(message, status_code = 409) {
+vpa_error <- function(message, status_code = 409) {
   structure(
     list(message = message, status_code = status_code),
-    class = c("VPAError", "error", "condition")
+    class = c("vpa_error", "error", "condition")
   )
 }
 
@@ -58,40 +61,51 @@ check_dns <- function(hostname) {
   )
   # timeout returns 124 if timed out, nslookup returns 1 if not found
   if (result %in% c(1, 124)) {
-    stop(VPAError(sprintf("Cannot resolve hostname: %s", hostname), 404))
+    stop(vpa_error(sprintf("Cannot resolve hostname: %s", hostname), 404))
   }
 }
 
 # Helper function to fetch CSV with explicit timeout control
 rfetch_csv <- function(url) {
-  tryCatch({
-    hostname <- gsub("^https?://([^/?#]+).*", "\\1", url)
+  tryCatch(
+    {
+      hostname <- gsub("^https?://([^/?#]+).*", "\\1", url)
 
-    # Verify DNS resolution (prevents hanging on slow/unresolvable domains)
-    tryCatch(check_dns(hostname), error = function(e) {
-      if (inherits(e, "VPAError")) stop(e)
-      # If system call fails, continue anyway
-    })
+      # Verify DNS resolution (prevents hanging on slow/unresolvable domains)
+      tryCatch(check_dns(hostname), error = function(e) {
+        if (inherits(e, "vpa_error")) stop(e)
+        # If system call fails, continue anyway
+      })
 
-    # Fetch with curl timeout
-    h <- curl::new_handle(connecttimeout = 1L, timeout = 2L)
-    resp <- curl::curl_fetch_memory(url, handle = h)
+      # Fetch with curl timeout
+      h <- curl::new_handle(connecttimeout = 1L, timeout = 2L)
+      resp <- curl::curl_fetch_memory(url, handle = h)
 
-    if (resp$status_code >= 400) {
-      stop(VPAError(sprintf("HTTP %d for %s", resp$status_code, url), 404))
+      if (resp$status_code >= 400) {
+        stop(vpa_error(sprintf("HTTP %d for %s", resp$status_code, url), 404))
+      }
+
+      read.csv(text = rawToChar(resp$content), row.names = 1)
+    },
+    error = function(e) {
+      if (inherits(e, "vpa_error")) {
+        stop(e)
+      }
+      stop(vpa_error(sprintf("Failed to fetch %s: %s", url, e$message), 404))
     }
-
-    read.csv(text = rawToChar(resp$content), row.names = 1)
-  }, error = function(e) {
-    if (inherits(e, "VPAError")) stop(e)
-    stop(VPAError(sprintf("Failed to fetch %s: %s", url, e$message), 404))
-  })
+  )
 }
 
 # Validation helpers
 validate_url <- function(url, param_name) {
   if (!is.character(url) || !grepl("^https?://", url)) {
-    list(error = sprintf("Invalid parameter: %s must be a valid HTTP(S) URL", param_name), status = 400)
+    list(
+      error = sprintf(
+        "Invalid parameter: %s must be a valid HTTP(S) URL",
+        param_name
+      ),
+      status = 400
+    )
   } else {
     NULL
   }
@@ -99,67 +113,135 @@ validate_url <- function(url, param_name) {
 
 validate_numeric <- function(value, param_name, required = FALSE) {
   if (required && is.null(value)) {
-    return(list(error = sprintf("Invalid parameter: %s is required", param_name), status = 400))
+    return(list(
+      error = sprintf("Invalid parameter: %s is required", param_name),
+      status = 400
+    ))
   }
   if (!is.null(value)) {
     if (!is.numeric(value) || length(value) != 1 || any(is.na(value))) {
-      return(list(error = sprintf("Invalid parameter: %s must be a single numeric value", param_name), status = 400))
+      return(list(
+        error = sprintf(
+          "Invalid parameter: %s must be a single numeric value",
+          param_name
+        ),
+        status = 400
+      ))
     }
     if (value <= 0) {
-      return(list(error = sprintf("Invalid parameter: %s must be greater than 0", param_name), status = 400))
+      return(list(
+        error = sprintf(
+          "Invalid parameter: %s must be greater than 0",
+          param_name
+        ),
+        status = 400
+      ))
     }
   }
   NULL
 }
 
-validate_logical <- function(value, param_name, required = FALSE, must_be_false = FALSE) {
+validate_logical <- function(
+  value,
+  param_name,
+  required = FALSE,
+  must_be_false = FALSE
+) {
   if (required && is.null(value)) {
-    return(list(error = sprintf("Invalid parameter: %s is required", param_name), status = 400))
+    return(list(
+      error = sprintf("Invalid parameter: %s is required", param_name),
+      status = 400
+    ))
   }
   if (!is.null(value)) {
     if (!is.logical(value) || length(value) != 1) {
-      return(list(error = sprintf("Invalid parameter: %s must be boolean", param_name), status = 400))
+      return(list(
+        error = sprintf("Invalid parameter: %s must be boolean", param_name),
+        status = 400
+      ))
     }
     if (must_be_false && value != FALSE) {
-      return(list(error = sprintf("Invalid parameter: %s must be false", param_name), status = 400))
+      return(list(
+        error = sprintf("Invalid parameter: %s must be false", param_name),
+        status = 400
+      ))
     }
   }
   NULL
 }
 
 validate_year_array <- function(value, param_name, raw_json) {
-  if (is.null(value)) return(NULL)
+  if (is.null(value)) {
+    return(NULL)
+  }
 
   # Check for array syntax in raw JSON
   is_array <- grepl(sprintf('"%s"\\s*:\\s*\\[', param_name), raw_json)
-  if (!is_array || !is.numeric(value) || length(value) == 0 || !all(value == as.integer(value))) {
-    return(list(error = sprintf("Invalid parameter: %s must be an array of integers", param_name), status = 400))
+  if (
+    !is_array ||
+      !is.numeric(value) ||
+      length(value) == 0 ||
+      !all(value == as.integer(value))
+  ) {
+    return(list(
+      error = sprintf(
+        "Invalid parameter: %s must be an array of integers",
+        param_name
+      ),
+      status = 400
+    ))
   }
 
   # Validate year range
-  if (any(value < MINIMUM_YEAR)) {
-    return(list(error = sprintf("Invalid parameter: %s values must be >= %d", param_name, MINIMUM_YEAR), status = 400))
+  if (any(value < minimum_year)) {
+    return(list(
+      error = sprintf(
+        "Invalid parameter: %s values must be >= %d",
+        param_name,
+        minimum_year
+      ),
+      status = 400
+    ))
   }
-  if (any(value > MAXIMUM_YEAR)) {
-    return(list(error = sprintf("Invalid parameter: %s values must be <= %d", param_name, MAXIMUM_YEAR), status = 400))
+  if (any(value > maximum_year)) {
+    return(list(
+      error = sprintf(
+        "Invalid parameter: %s values must be <= %d",
+        param_name,
+        maximum_year
+      ),
+      status = 400
+    ))
   }
   NULL
 }
 
 validate_enum <- function(value, param_name, allowed_values, required = FALSE) {
   if (required && is.null(value)) {
-    return(list(error = sprintf("Invalid parameter: %s is required", param_name), status = 400))
+    return(list(
+      error = sprintf("Invalid parameter: %s is required", param_name),
+      status = 400
+    ))
   }
   if (!is.null(value)) {
-    if (!is.character(value) || length(value) != 1 || !(value %in% allowed_values)) {
-      return(list(error = sprintf("Invalid parameter: %s must be one of: %s", param_name, paste(allowed_values, collapse = ", ")), status = 400))
+    if (
+      !is.character(value) || length(value) != 1 || !(value %in% allowed_values)
+    ) {
+      return(list(
+        error = sprintf(
+          "Invalid parameter: %s must be one of: %s",
+          param_name,
+          paste(allowed_values, collapse = ", ")
+        ),
+        status = 400
+      ))
     }
   }
   NULL
 }
 
 # Parameter specifications for table-driven validation
-PARAM_SPECS <- list(
+param_specs <- list(
   list(name = "m", type = "numeric"),
   list(name = "p_init", type = "numeric"),
   list(name = "pope", type = "logical"),
@@ -167,16 +249,25 @@ PARAM_SPECS <- list(
   list(name = "fc_year", type = "year_array"),
   list(name = "tf_year", type = "year_array"),
   list(name = "term_f", type = "enum", allowed_values = c("max", "mean")),
-  list(name = "stat_tf", type = "enum", allowed_values = c("mean", "median", "max", "min"))
+  list(
+    name = "stat_tf",
+    type = "enum",
+    allowed_values = c("mean", "median", "max", "min")
+  )
 )
 
 # Validate a single parameter based on its specification
 validate_param <- function(param_name, param_value, spec, raw_json) {
   # Explicitly specified null values are invalid
   if (!is.null(param_value)) {
-    switch(spec$type,
+    switch(
+      spec$type,
       "numeric" = validate_numeric(param_value, param_name),
-      "logical" = validate_logical(param_value, param_name, must_be_false = isTRUE(spec$must_be_false)),
+      "logical" = validate_logical(
+        param_value,
+        param_name,
+        must_be_false = isTRUE(spec$must_be_false)
+      ),
       "year_array" = validate_year_array(param_value, param_name, raw_json),
       "enum" = validate_enum(param_value, param_name, spec$allowed_values),
       NULL
@@ -190,7 +281,11 @@ validate_param <- function(param_name, param_value, spec, raw_json) {
 validate_vpa_params <- function(body, raw_json) {
   # Validate body is an object
   if (!is.list(body) || is.null(names(body)) || length(names(body)) == 0) {
-    return(list(valid = FALSE, error = "Invalid request: body must be a JSON object", status = 400))
+    return(list(
+      valid = FALSE,
+      error = "Invalid request: body must be a JSON object",
+      status = 400
+    ))
   }
 
   data <- body$data
@@ -198,95 +293,169 @@ validate_vpa_params <- function(body, raw_json) {
 
   # Validate data structure
   if (is.null(data) || !is.list(data) || is.data.frame(data)) {
-    return(list(valid = FALSE, error = "Invalid parameter: data must be an object", status = 400))
+    return(list(
+      valid = FALSE,
+      error = "Invalid parameter: data must be an object",
+      status = 400
+    ))
   }
 
   if ("params" %in% names(body) && is.null(body$params)) {
-    return(list(valid = FALSE, error = "Invalid parameter: params must be an object, not null", status = 400))
+    return(list(
+      valid = FALSE,
+      error = "Invalid parameter: params must be an object, not null",
+      status = 400
+    ))
   }
 
   if (!is.null(body$params) && !is.list(body$params)) {
-    return(list(valid = FALSE, error = "Invalid parameter: params must be an object", status = 400))
+    return(list(
+      valid = FALSE,
+      error = "Invalid parameter: params must be an object",
+      status = 400
+    ))
   }
 
   # Validate unexpected properties
   unexpected_in_body <- setdiff(names(body), c("data", "params"))
   if (length(unexpected_in_body) > 0) {
-    return(list(valid = FALSE, error = sprintf("Invalid request: unexpected properties: %s", paste(unexpected_in_body, collapse = ", ")), status = 400))
+    return(list(
+      valid = FALSE,
+      error = sprintf(
+        "Invalid request: unexpected properties: %s",
+        paste(unexpected_in_body, collapse = ", ")
+      ),
+      status = 400
+    ))
   }
 
   unexpected_in_data <- setdiff(names(data), c("caa_url", "waa_url", "maa_url"))
   if (length(unexpected_in_data) > 0) {
-    return(list(valid = FALSE, error = sprintf("Invalid parameter: unexpected properties in data: %s", paste(unexpected_in_data, collapse = ", ")), status = 400))
+    return(list(
+      valid = FALSE,
+      error = sprintf(
+        "Invalid parameter: unexpected properties in data: %s",
+        paste(unexpected_in_data, collapse = ", ")
+      ),
+      status = 400
+    ))
   }
 
-  expected_params_props <- c("m", "fc_year", "tf_year", "term_f", "stat_tf", "pope", "tune", "p_init", "sel_update", "sel_f", "alpha", "max_dd", "abund", "min_age", "max_age")
+  expected_params_props <- c(
+    "m",
+    "fc_year",
+    "tf_year",
+    "term_f",
+    "stat_tf",
+    "pope",
+    "tune",
+    "p_init",
+    "sel_update",
+    "sel_f",
+    "alpha",
+    "max_dd",
+    "abund",
+    "min_age",
+    "max_age"
+  )
   unexpected_in_params <- setdiff(names(params), expected_params_props)
   if (length(unexpected_in_params) > 0) {
-    return(list(valid = FALSE, error = sprintf("Invalid parameter: unexpected properties in params: %s", paste(unexpected_in_params, collapse = ", ")), status = 400))
+    return(list(
+      valid = FALSE,
+      error = sprintf(
+        "Invalid parameter: unexpected properties in params: %s",
+        paste(unexpected_in_params, collapse = ", ")
+      ),
+      status = 400
+    ))
   }
 
   # Validate data URLs
   for (url_param in c("caa_url", "waa_url", "maa_url")) {
     err <- validate_url(data[[url_param]], url_param)
-    if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+    if (!is.null(err)) {
+      return(list(valid = FALSE, error = err$error, status = err$status))
+    }
   }
 
   # Validate parameters (table-driven)
-  for (spec in PARAM_SPECS) {
+  for (spec in param_specs) {
     param_name <- spec$name
     param_value <- params[[param_name]]
 
     # Check for explicitly specified null values
     if (param_name %in% names(params) && is.null(param_value)) {
-      return(list(valid = FALSE, error = sprintf("Invalid parameter: %s must be a valid value", param_name), status = 400))
+      return(list(
+        valid = FALSE,
+        error = sprintf(
+          "Invalid parameter: %s must be a valid value",
+          param_name
+        ),
+        status = 400
+      ))
     }
 
     # Validate parameter if present
     err <- validate_param(param_name, param_value, spec, raw_json)
-    if (!is.null(err)) return(list(valid = FALSE, error = err$error, status = err$status))
+    if (!is.null(err)) {
+      return(list(valid = FALSE, error = err$error, status = err$status))
+    }
   }
 
   list(valid = TRUE)
 }
 
 # Helper function to load data files with error handling
-load_vpa_data <- function(caa_url, waa_url, maa_url, M) {
-  tryCatch({
-    log_debug(sprintf("Loading CSV files: caa=%s, waa=%s, maa=%s", caa_url, waa_url, maa_url))
+load_vpa_data <- function(caa_url, waa_url, maa_url, m) {
+  tryCatch(
+    {
+      log_debug(sprintf(
+        "Loading CSV files: caa=%s, waa=%s, maa=%s",
+        caa_url,
+        waa_url,
+        maa_url
+      ))
 
-    # Fetch each file sequentially - stop at first error
-    log_debug("Fetching caa...")
-    caa_data <- rfetch_csv(caa_url)
-    log_debug("Fetching waa...")
-    waa_data <- rfetch_csv(waa_url)
-    log_debug("Fetching maa...")
-    maa_data <- rfetch_csv(maa_url)
+      # Fetch each file sequentially - stop at first error
+      log_debug("Fetching caa...")
+      caa_data <- rfetch_csv(caa_url)
+      log_debug("Fetching waa...")
+      waa_data <- rfetch_csv(waa_url)
+      log_debug("Fetching maa...")
+      maa_data <- rfetch_csv(maa_url)
 
-    data.handler(
-      caa = caa_data,
-      waa = waa_data,
-      maa = maa_data,
-      M = as.numeric(M)
-    )
-  }, error = function(e) {
-    # Handle VPAError from rfetch_csv
-    if (inherits(e, "VPAError")) {
-      stop(e)
+      data.handler(
+        caa = caa_data,
+        waa = waa_data,
+        maa = maa_data,
+        M = as.numeric(m)
+      )
+    },
+    error = function(e) {
+      # Handle vpa_error from rfetch_csv
+      if (inherits(e, "vpa_error")) {
+        stop(e)
+      }
+
+      error_msg <- e$message
+      status_code <- 409
+
+      # 409: Data format or processing error
+      if (
+        grepl(
+          "col.names|row.names|invalid|incompatible",
+          error_msg,
+          ignore.case = TRUE
+        )
+      ) {
+        error_msg <- sprintf("Data format error: %s", error_msg)
+      } else {
+        error_msg <- sprintf("Data processing error: %s", error_msg)
+      }
+
+      stop(vpa_error(error_msg, status_code))
     }
-
-    error_msg <- e$message
-    status_code <- 409
-
-    # 409: Data format or processing error
-    if (grepl("col.names|row.names|invalid|incompatible", error_msg, ignore.case = TRUE)) {
-      error_msg <- sprintf("Data format error: %s", error_msg)
-    } else {
-      error_msg <- sprintf("Data processing error: %s", error_msg)
-    }
-
-    stop(VPAError(error_msg, status_code))
-  })
+  )
 }
 
 #* @apiTitle Stock Assessment API
@@ -302,11 +471,15 @@ load_vpa_data <- function(caa_url, waa_url, maa_url, M) {
 #*   description: "Run Virtual Population Analysis"
 #* @serializer unboxedJSON
 function(req, res) {
-    log_info("POST /v0/vpa - Request received")
+  log_info("POST /v0/vpa - Request received")
 
-    tryCatch({
+  tryCatch(
+    {
       # Parse request
-      log_debug(sprintf("Request postBody length: %d bytes", nchar(req$postBody)))
+      log_debug(sprintf(
+        "Request postBody length: %d bytes",
+        nchar(req$postBody)
+      ))
 
       if (nchar(req$postBody) == 0) {
         log_warn("POST /v0/vpa - Empty request body")
@@ -328,28 +501,28 @@ function(req, res) {
       data <- body$data
       params <- body$params %||% list()
 
-      # Load and validate data (throws VPAError on failure)
+      # Load and validate data (throws vpa_error on failure)
       vpa_data <- load_vpa_data(
-              data$caa_url,
-              data$waa_url,
-              data$maa_url,
-              M = params$m %||% 0.5
-          )
+        data$caa_url,
+        data$waa_url,
+        data$maa_url,
+        M = params$m %||% 0.5
+      )
 
       # VPA calculation
       result_vpa <- vpa(
-          vpa_data,
-          fc.year = params$fc_year %||% 2015:2017,
-          tf.year = params$tf_year %||% 2015:2016,
-          term.F  = params$term_f %||% "max",
-          stat.tf = params$stat_tf %||% "mean",
-          Pope    = params$pope %||% TRUE,
-          tune    = params$tune %||% FALSE,
-          p.init  = params$p_init %||% 0.5
+        vpa_data,
+        fc.year = params$fc_year %||% 2015:2017,
+        tf.year = params$tf_year %||% 2015:2016,
+        term.F = params$term_f %||% "max",
+        stat.tf = params$stat_tf %||% "mean",
+        Pope = params$pope %||% TRUE,
+        tune = params$tune %||% FALSE,
+        p.init = params$p_init %||% 0.5
       )
       wcaa <- as.data.frame(result_vpa$wcaa)
       result <- setNames(
-          lapply(seq_len(nrow(wcaa)), function(i) {
+        lapply(seq_len(nrow(wcaa)), function(i) {
           x <- unlist(wcaa[i, ], use.names = FALSE)
           names(x) <- colnames(wcaa)
           as.list(x)
@@ -370,20 +543,23 @@ function(req, res) {
       log_info(paste("VPA success"))
       res$status <- 200
       return(result)
-    }, error = function(e) {
-      # Handle VPAError with specific status code
-      if (inherits(e, "VPAError")) {
-        log_warn(sprintf("POST /v0/vpa - VPA error (%d): %s", e$status_code, e$message))
+    },
+    error = function(e) {
+      # Handle vpa_error with specific status code
+      if (inherits(e, "vpa_error")) {
+        log_warn(sprintf(
+          "POST /v0/vpa - VPA error (%d): %s",
+          e$status_code,
+          e$message
+        ))
         res$status <- e$status_code
-        return(list(error = e$message))
-      }
-      # Other errors (JSON parsing and null bytes handled by global error handler in run.R)
-      else {
+        list(error = e$message)
+      } else {
+        # Other errors (JSON parsing and null bytes handled by global error handler in run.R)
         log_warn(sprintf("POST /v0/vpa - Unexpected error: %s", e$message))
         res$status <- 500
-        return(list(error = "Internal server error"))
+        list(error = "Internal server error")
       }
-    })
-    # Ensure function exits - tryCatch may not fully exit
-    return(NULL)
+    }
+  )
 }

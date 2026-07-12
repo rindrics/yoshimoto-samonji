@@ -9,13 +9,23 @@ library(logger)
 pr <- plumber::plumb("plumber.R")
 
 # Global error handler for malformed requests (e.g., null bytes)
-MALFORMED_REQUEST_PATTERNS <- c(
-  "nul character", "parse error", "EOF", "lexical error", "invalid char",
-  "unexpected end", "Expected", "escape sequence", "premature", "Unterminated"
+malformed_request_patterns <- c(
+  "nul character",
+  "parse error",
+  "EOF",
+  "lexical error",
+  "invalid char",
+  "unexpected end",
+  "Expected",
+  "escape sequence",
+  "premature",
+  "Unterminated"
 )
 
 pr$setErrorHandler(function(req, res, err) {
-  error_msg <- tryCatch(as.character(err$message), error = function(e) "Unknown error")
+  error_msg <- tryCatch(as.character(err$message), error = function(e) {
+    "Unknown error"
+  })
 
   # Sanitize error message (handle invalid UTF-8)
   error_msg_safe <- tryCatch(
@@ -23,20 +33,23 @@ pr$setErrorHandler(function(req, res, err) {
     error = function(e) "Unknown error"
   )
 
-  log_debug(sprintf("Global error handler triggered. Error: %s", error_msg_safe))
+  log_debug(sprintf(
+    "Global error handler triggered. Error: %s",
+    error_msg_safe
+  ))
 
   # Check for malformed request patterns (including null bytes)
-  pattern <- paste(MALFORMED_REQUEST_PATTERNS, collapse = "|")
+  pattern <- paste(malformed_request_patterns, collapse = "|")
   if (grepl(pattern, error_msg_safe, ignore.case = TRUE)) {
     log_warn(sprintf("Malformed request: %s", error_msg_safe))
     res$status <- 400
-    return(list(error = "Invalid request: malformed data"))
+    list(error = "Invalid request: malformed data")
   }
 
   # Default error response
   log_error(sprintf("Unhandled error: %s", error_msg_safe))
   res$status <- 500
-  return(list(error = "Internal server error"))
+  list(error = "Internal server error")
 })
 
 pr$run(
