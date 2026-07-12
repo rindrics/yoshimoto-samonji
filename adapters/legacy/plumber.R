@@ -506,7 +506,7 @@ function(req, res) {
         data$caa_url,
         data$waa_url,
         data$maa_url,
-        M = params$m %||% 0.5
+        m = params$m %||% 0.5
       )
 
       # VPA calculation
