@@ -63,7 +63,7 @@ setup:
 	@echo "Dev dependencies installed"
 
 format:
-	air format .
+	air format $(CHECK) .
 
 lint:
 	Rscript -e "lintr::lint_dir('.')"
