@@ -126,6 +126,12 @@ function(req, res) {
       )
       log_debug("JSON parse completed")
 
+      # Validate body is an object (not an array)
+      if (!is.list(body) || is.null(names(body)) || length(names(body)) == 0) {
+        res$status <- 400
+        return(list(error = "Invalid request: body must be a JSON object"))
+      }
+
       if (isTRUE(body$parsing_error)) {
         raw_preview <- substr(req$postBody, 1, 100)
         log_warn(sprintf("POST /v0/vpa - JSON parsing error: %s", body$message))
@@ -139,7 +145,93 @@ function(req, res) {
 
       data <- body$data
       params <- body$params %||% list()
-      log_debug(sprintf("VPA parameters: m=%s", params$m %||% 0.5))
+
+      # Validate data is an object, not null or array
+      if (is.null(data) || !is.list(data) || is.data.frame(data)) {
+        res$status <- 400
+        return(list(error = "Invalid parameter: data must be an object"))
+      }
+
+      # Validate params is an object, not null
+      if ("params" %in% names(body) && is.null(body$params)) {
+        res$status <- 400
+        return(list(error = "Invalid parameter: params must be an object, not null"))
+      }
+
+      # Validate data URLs (must be character strings)
+      if (!is.character(data$caa_url) || !grepl("^https?://", data$caa_url)) {
+        res$status <- 400
+        return(list(error = "Invalid parameter: caa_url must be a valid HTTP(S) URL"))
+      }
+      if (!is.character(data$waa_url) || !grepl("^https?://", data$waa_url)) {
+        res$status <- 400
+        return(list(error = "Invalid parameter: waa_url must be a valid HTTP(S) URL"))
+      }
+      if (!is.character(data$maa_url) || !grepl("^https?://", data$maa_url)) {
+        res$status <- 400
+        return(list(error = "Invalid parameter: maa_url must be a valid HTTP(S) URL"))
+      }
+
+      # Validate numeric parameters (must be single numeric value, not array or null values)
+      if ("m" %in% names(params)) {
+        if (is.null(params$m) || !is.numeric(params$m) || length(params$m) != 1 || any(is.na(params$m))) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: m must be a single numeric value"))
+        }
+      }
+      if ("p_init" %in% names(params)) {
+        if (is.null(params$p_init) || !is.numeric(params$p_init) || length(params$p_init) != 1) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: p_init must be a single numeric value"))
+        }
+      }
+
+      # Validate boolean parameters (must be single logical value, not null if provided)
+      if ("pope" %in% names(params)) {
+        if (is.null(params$pope) || !is.logical(params$pope) || length(params$pope) != 1) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: pope must be boolean"))
+        }
+      }
+      if ("tune" %in% names(params)) {
+        if (is.null(params$tune) || !is.logical(params$tune) || length(params$tune) != 1 || params$tune != FALSE) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: tune must be false"))
+        }
+      }
+
+      # Validate array parameters (must be arrays of integers if provided)
+      # For single-element JSON values like tf_year: 0, check raw JSON for array syntax
+      if ("fc_year" %in% names(params)) {
+        # Extract fc_year value from raw JSON to check if it's array syntax
+        fc_year_is_array <- grepl('"fc_year"\\s*:\\s*\\[', req$postBody)
+        if (!fc_year_is_array || is.null(params$fc_year) || !is.numeric(params$fc_year) || length(params$fc_year) == 0 || !all(params$fc_year == as.integer(params$fc_year))) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: fc_year must be an array of integers"))
+        }
+      }
+      if ("tf_year" %in% names(params)) {
+        # Extract tf_year value from raw JSON to check if it's array syntax
+        tf_year_is_array <- grepl('"tf_year"\\s*:\\s*\\[', req$postBody)
+        if (!tf_year_is_array || is.null(params$tf_year) || !is.numeric(params$tf_year) || length(params$tf_year) == 0 || !all(params$tf_year == as.integer(params$tf_year))) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: tf_year must be an array of integers"))
+        }
+      }
+
+      # Validate string enum parameters (must be single string value, not null if provided)
+      if ("term_f" %in% names(params)) {
+        if (is.null(params$term_f) || !is.character(params$term_f) || length(params$term_f) != 1 || !(params$term_f %in% c("max", "mean"))) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: term_f must be 'max' or 'mean'"))
+        }
+      }
+      if ("stat_tf" %in% names(params)) {
+        if (is.null(params$stat_tf) || !is.character(params$stat_tf) || length(params$stat_tf) != 1 || !(params$stat_tf %in% c("mean", "median", "max", "min"))) {
+          res$status <- 400
+          return(list(error = "Invalid parameter: stat_tf must be one of: mean, median, max, min"))
+        }
+      }
 
       # Load and validate data (throws VPAError on failure)
       vpa_data <- load_vpa_data(
