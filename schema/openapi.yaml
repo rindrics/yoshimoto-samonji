@@ -76,17 +76,29 @@ paths:
                   error:
                     type: string
                     description: Error message describing data format or processing issue
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the internal server error
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              minProperties: 1
               required:
                 - data
               properties:
                 data:
                   type: object
+                  minProperties: 3
                   required:
                     - caa_url
                     - waa_url
@@ -95,6 +107,7 @@ paths:
                     caa_url:
                       type: string
                       format: uri
+                      minLength: 2
                       description: URL to catch-at-age CSV file
                     waa_url:
                       type: string

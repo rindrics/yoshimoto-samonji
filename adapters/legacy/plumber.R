@@ -98,11 +98,19 @@ function(req, res) {
       # Parse and validate request
       log_debug(sprintf("Request postBody length: %d bytes", nchar(req$postBody)))
 
-      # Check for empty or null-byte-only request body
-      if (nchar(req$postBody) == 0 || grepl("^\\x00+$", req$postBody)) {
-        log_warn("POST /v0/vpa - Empty or null-byte request body")
+      # Check for empty request body
+      if (nchar(req$postBody) == 0) {
+        log_warn("POST /v0/vpa - Empty request body")
         res$status <- 400
         return(list(error = "Empty request body"))
+      }
+
+      # Check for null bytes using raw byte comparison
+      raw_body <- charToRaw(req$postBody)
+      if (any(raw_body == as.raw(0))) {
+        log_warn("POST /v0/vpa - Request body contains null bytes")
+        res$status <- 400
+        return(list(error = "Invalid request: null bytes not allowed"))
       }
 
       log_debug("Attempting JSON parse...")
@@ -127,16 +135,7 @@ function(req, res) {
         return()
       }
 
-      req_json <- jsonlite::toJSON(body, auto_unbox = TRUE)
-      log_debug(sprintf("Request body: %d bytes", nchar(req_json)))
-
-      if (!jsonvalidate::json_validate(req_json, vpa_request_schema)) {
-        log_warn("POST /v0/vpa - Request validation failed")
-        res$status <- 400
-        return(list(error = "Invalid request: data with caa_url, waa_url, maa_url required"))
-      }
-
-      log_info("POST /v0/vpa - Request validation passed")
+      log_debug(sprintf("Request body parsed successfully"))
 
       data <- body$data
       params <- body$params %||% list()
