@@ -17,6 +17,10 @@ on:
 env:
   LOCAL_IMAGE: yoshimotosamonji-monolith
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   contract-test:
     runs-on: ubuntu-latest
@@ -46,10 +50,6 @@ jobs:
           make docker-up
           sleep 5
 
-      - name: Debug - Check docker networks
-        run: |
-          docker network ls | grep -i vpa || echo "No VPA network found"
-          docker ps
 
       - name: Prepare test directories
         run: |
@@ -62,12 +62,35 @@ jobs:
         env:
           COMPOSE_PROJECT_NAME: yoshimoto-samonji
 
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
+      - name: Prepare coverage report for deployment
+        if: always() && hashFiles('.schemathesis/schema-coverage.html') != ''
+        run: |
+          mkdir -p .pages-deploy
+          cp .schemathesis/schema-coverage.html .pages-deploy/index.html
+
+      - name: Deploy coverage report to GitHub Pages
+        if: always() && hashFiles('.pages-deploy/index.html') != ''
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453  #v4.1.0
         with:
-          name: schemathesis-results
-          path: schemathesis-result.xml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .pages-deploy
+          destination_dir: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'main' }}
+
+      - name: Comment PR with coverage report link
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3  #v9.0.0
+        with:
+          script: |
+            const prNumber = context.issue.number;
+            const reportUrl = `${{ github.server_url }}/${{ github.repository }}/deployments`;
+            const comment = `📊 Schema Coverage Report: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pr-${prNumber}/schema-coverage.html`;
+
+            github.rest.issues.createComment({
+              issue_number: prNumber,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
 
       - name: Stop services
         if: always()

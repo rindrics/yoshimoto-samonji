@@ -1,0 +1,17 @@
+{
+  "name": "yoshimoto-samonji",
+  "version": "0.1.0",
+  "description": "Yoshimoto Samonji API",
+  "scripts": {
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.2.11"
+  },
+  "lint-staged": {
+    "adapters/legacy/**/*.R": [
+      "sh -c 'LINTR_ERROR_ON_LINT=true make -C adapters/legacy lint'"
+    ]
+  }
+}

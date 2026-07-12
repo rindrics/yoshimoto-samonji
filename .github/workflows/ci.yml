@@ -1,0 +1,46 @@
+name: CI - Lint and Format
+
+on:
+  pull_request:
+    paths:
+      - 'adapters/legacy/**'
+      - '.github/workflows/ci.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'adapters/legacy/**'
+      - '.github/workflows/ci.yml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Set up R
+        uses: r-lib/actions/setup-r@d3c5be51b12e724e68f33216ca3c148b66d5f0b6  # v2.12.1
+        with:
+          r-version: '4.5.2'
+
+      - name: Install lintr
+        working-directory: adapters/legacy
+        run: install.packages("lintr")
+        shell: Rscript {0}
+
+      - name: Lint root directory
+        run: make lint
+        env:
+          LINTR_ERROR_ON_LINT: true        
+
+  format-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+
+      - name: Install air
+        run: curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
+
+      - name: Check formatting
+        working-directory: adapters/legacy
+        run: make format CHECK=--check

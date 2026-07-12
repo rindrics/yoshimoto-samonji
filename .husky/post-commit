@@ -1,0 +1,25 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+# Get files changed in the last commit
+CHANGED_FILES=$(git diff HEAD~1..HEAD --name-only 2>/dev/null | grep '\.R$' | grep 'adapters/legacy' || echo "")
+
+if [ -z "$CHANGED_FILES" ]; then
+  exit 0
+fi
+
+echo "📝 Formatting files from last commit..."
+
+# Format only the changed R files from the last commit
+cd adapters/legacy
+for file in $CHANGED_FILES; do
+  air format "${file#adapters/legacy/}" 2>/dev/null
+done
+
+# Show diff if there are formatting changes
+if ! git diff --quiet; then
+  echo ""
+  echo "⚠️  Format diff (not staged - stage and commit if needed):"
+  echo ""
+  git diff --color
+fi
