@@ -1,0 +1,9 @@
+seed = 1
+request-timeout = 5
+
+[generation]
+max-examples = 100
+
+[phases.coverage]
+# Disable unsupported method testing entirely
+unexpected-methods = []

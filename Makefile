@@ -1,4 +1,4 @@
-.PHONY: docker-build docker-up docker-down docker-logs docker-clean docker-clean-build prod-up prod-down prod-logs dredd help
+.PHONY: docker-build docker-up docker-down docker-logs docker-clean docker-clean-build prod-up prod-down prod-logs test help
 
 PLUMBER_PORT ?= 8000
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
@@ -18,7 +18,7 @@ help:
 	@echo "  make docker-logs       - View container logs"
 	@echo "  make docker-clean      - Remove image and build cache"
 	@echo "  make docker-clean-build - Clean and rebuild image"
-	@echo "  make dredd             - Run contract tests with Dredd"
+	@echo "  make test              - Run contract tests with Schemathesis"
 	@echo ""
 	@echo "Production targets:"
 	@echo "  make prod-up           - Start production containers (pulls from registry)"
@@ -56,5 +56,5 @@ prod-down:
 prod-logs:
 	$(DOCKER_COMPOSE) logs -f monolith
 
-dredd:
-	$(MAKE) -C adapters/legacy dredd
+test:
+	$(MAKE) -C adapters/legacy test

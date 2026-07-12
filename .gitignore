@@ -2,3 +2,8 @@
 .env
 *.tar.gz
 node_modules/
+
+# Schemathesis test outputs
+schemathesis-result.xml
+schema-coverage.html
+.schemathesis/
