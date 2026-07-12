@@ -46,10 +46,6 @@ jobs:
           make docker-up
           sleep 5
 
-      - name: Debug - Check docker networks
-        run: |
-          docker network ls | grep -i vpa || echo "No VPA network found"
-          docker ps
 
       - name: Prepare test directories
         run: |
