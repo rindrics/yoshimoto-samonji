@@ -58,12 +58,12 @@ jobs:
         env:
           COMPOSE_PROJECT_NAME: yoshimoto-samonji
 
-      - name: Upload test results
+      - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7.0.1
         with:
-          name: schemathesis-results
-          path: schemathesis-result.xml
+          name: schema-coverage
+          path: .schemathesis/schema-coverage.html
 
       - name: Stop services
         if: always()

@@ -38,7 +38,8 @@ test:
 	  -w /workspace/.schemathesis \
 	  ghcr.io/schemathesis/schemathesis:stable \
 	  run /schema/openapi.yaml \
-	  --url http://monolith:$(CONTAINER_PORT)
+	  --url http://monolith:$(CONTAINER_PORT) \
+	  --coverage-format html --coverage-report-html-path ./schema-coverage.html
 
 test-local:
 	docker run --rm \
@@ -48,7 +49,9 @@ test-local:
 	  -w /workspace \
 	  ghcr.io/schemathesis/schemathesis:stable \
 	  run /schema/openapi.yaml \
-	  --url http://host.docker.internal:$(PLUMBER_DEV_PORT)
+	  --url http://host.docker.internal:$(PLUMBER_DEV_PORT) \
+ 	  --coverage-format html --coverage-report-html-path ./schema-coverage.html
+
 
 docker-build:
 	docker build --no-cache -t $(BUILD_IMAGE):$(GIT_COMMIT) -t $(BUILD_IMAGE):latest ./
