@@ -166,6 +166,8 @@ paths:
                       description: Use Pope's approximation
                     tune:
                       type: boolean
+                      enum:
+                        - false
                       default: false
                       description: Tune VPA parameters
                     p_init:
