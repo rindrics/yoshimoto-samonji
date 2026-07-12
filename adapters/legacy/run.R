@@ -43,7 +43,7 @@ pr$setErrorHandler(function(req, res, err) {
   if (grepl(pattern, error_msg_safe, ignore.case = TRUE)) {
     log_warn(sprintf("Malformed request: %s", error_msg_safe))
     res$status <- 400
-    list(error = "Invalid request: malformed data")
+    return(list(error = "Invalid request: malformed data"))
   }
 
   # Default error response
