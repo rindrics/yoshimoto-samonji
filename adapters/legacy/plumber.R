@@ -52,12 +52,16 @@ extract_response_schema <- function(path, method, status_code) {
       method_lower <- tolower(method)
       status_str <- as.character(status_code)
 
-      schema <- openapi_spec$paths[[path]][[method_lower]]$responses[[status_str]]$content$`application/json`$schema
+      schema <- openapi_spec$paths[[path]][[method_lower]]$responses[[
+        status_str
+      ]]$content$`application/json`$schema
 
       if (is.null(schema)) {
         log_warn(sprintf(
           "Response schema not found: %s %s %s",
-          method, path, status_code
+          method,
+          path,
+          status_code
         ))
         return(NULL)
       }
@@ -81,7 +85,8 @@ validate_response <- function(response, path, method, status_code) {
   if (is.null(response_schema)) {
     log_warn(sprintf(
       "Skipping response validation: schema not available for %s %s",
-      method, path
+      method,
+      path
     ))
     return(TRUE)
   }
@@ -92,7 +97,8 @@ validate_response <- function(response, path, method, status_code) {
   if (!is_valid) {
     log_error(sprintf(
       "Response validation failed for %s %s",
-      method, path
+      method,
+      path
     ))
   }
 
