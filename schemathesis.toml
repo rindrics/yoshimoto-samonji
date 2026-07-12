@@ -2,6 +2,7 @@ seed = 1
 request-timeout = 5
 
 [generation]
+database = ":memory:"
 max-examples = 100
 
 [phases.coverage]
