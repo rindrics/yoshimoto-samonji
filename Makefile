@@ -29,11 +29,11 @@ help:
 	@echo "  make prod-logs         - View production container logs"
 	@echo ""
 	@echo "For adapter-specific commands, use:"
-	@echo "  make -C adapters/legacy run"
-	@echo "  make -C adapters/legacy clean"
+	@echo "  make -C services/monolith run"
+	@echo "  make -C services/monolith clean"
 
 docker-build:
-	$(MAKE) -C adapters/legacy docker-build
+	$(MAKE) -C services/monolith docker-build
 
 docker-up:
 	MONOLITH_IMAGE=$(LOCAL_IMAGE):$(GIT_COMMIT) VALIDATE_RESPONSE=$(VALIDATE_RESPONSE) $(DOCKER_COMPOSE) up -d --no-build monolith
@@ -60,13 +60,13 @@ prod-logs:
 	$(DOCKER_COMPOSE) logs -f monolith
 
 test:
-	$(MAKE) -C adapters/legacy test
+	$(MAKE) -C services/monolith test
 
 setup:
-	$(MAKE) -C adapters/legacy setup
+	$(MAKE) -C services/monolith setup
 
 format:
-	$(MAKE) -C adapters/legacy format
+	$(MAKE) -C services/monolith format
 
 lint:
-	$(MAKE) -C adapters/legacy lint
+	$(MAKE) -C services/monolith lint

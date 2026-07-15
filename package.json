@@ -10,8 +10,8 @@
     "lint-staged": "^15.2.11"
   },
   "lint-staged": {
-    "adapters/legacy/**/*.R": [
-      "sh -c 'LINTR_ERROR_ON_LINT=true make -C adapters/legacy lint'"
+    "services/monolith/**/*.R": [
+      "sh -c 'LINTR_ERROR_ON_LINT=true make -C services/monolith lint'"
     ]
   }
 }
