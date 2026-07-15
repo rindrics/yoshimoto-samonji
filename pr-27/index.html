@@ -2293,9 +2293,9 @@ input:focus-visible {
             </div>
             <div class="subtitle">API Coverage Report</div>
         </div>
-        <div class="time" data-iso="2026-07-15T00:31:25Z">
+        <div class="time" data-iso="2026-07-15T00:59:17Z">
             <span class="rel"></span>
-            <span class="abs">2026-07-15 00:31:25</span>
+            <span class="abs">2026-07-15 00:59:17</span>
         </div>
     </header>
 
@@ -2365,7 +2365,7 @@ input:focus-visible {
                     <div class="mc-accent"><span class="fill"></span></div>
                 </div>
 
-                <div class="mc magnitude state-uncovered" style="--pct: 0">
+                <div class="mc magnitude state-partial" style="--pct: 60">
                     <div class="mc-head">
                         <span class="mc-title">Responses</span>
                         <span class="mc-state"></span>
@@ -2374,8 +2374,8 @@ input:focus-visible {
                     <div class="mc-body">
                         <div class="mc-arc"></div>
                         <div class="mc-num">
-                            <span class="big">0<span class="unit">%</span></span>
-                            <span class="sub">no responses recorded</span>
+                            <span class="big">60.0<span class="unit">%</span></span>
+                            <span class="sub">3 of 5 received</span>
                         </div>
                     </div>
                     <div class="mc-accent"><span class="fill"></span></div>
@@ -2394,13 +2394,13 @@ input:focus-visible {
                 <div class="filter-group" role="group" aria-label="Coverage filters">
                     <span class="filter-group-label">Show</span>
                     <button type="button" class="filter-chip covered on" data-filter="covered" aria-pressed="true">
-                        <span class="dot"></span>Covered<span class="ct">0</span>
+                        <span class="dot"></span>Covered<span class="ct">1</span>
                     </button>
                     <button type="button" class="filter-chip partial on" data-filter="partial" aria-pressed="true">
                         <span class="dot"></span>Partial<span class="ct">0</span>
                     </button>
                     <button type="button" class="filter-chip uncovered on" data-filter="uncovered" aria-pressed="true">
-                        <span class="dot"></span>Uncovered<span class="ct">1</span>
+                        <span class="dot"></span>Uncovered<span class="ct">0</span>
                     </button>
                 </div>
                 <button type="button" class="toggle-all-btn" id="toggle-all">
@@ -2419,19 +2419,19 @@ input:focus-visible {
         <span class="group-name">vpa</span>
         <span class="group-count">
             <span class="ops">1 operation</span>
-            <span class="b ok zero">0 covered</span>
+            <span class="b ok">1 covered</span>
             <span class="b wn zero">0 partial</span>
-            <span class="b bd">1 uncovered</span>
+            <span class="b bd zero">0 uncovered</span>
         </span>
         <span class="group-bar"><span class="fill"></span></span>
         <span class="group-pct">100.0%</span>
     </summary>
     <a class="anchor" href="#group-vpa" aria-label="Link to vpa">#</a>
     <div class="group-body">
-<div class="accordion" data-covered="uncovered">
+<div class="accordion" data-covered="covered">
     <input type="checkbox" id="acc-toggle1">
-    <label for="acc-toggle1" class="accordion-header magnitude state-uncovered" style="--pct: 0">
-        <span class="row-status" aria-hidden="true"><svg width="11" height="11"><use href="#icon-x"/></svg></span>
+    <label for="acc-toggle1" class="accordion-header magnitude state-covered" style="--pct: 100">
+        <span class="row-status" aria-hidden="true"><svg width="11" height="11"><use href="#icon-check"/></svg></span>
         <span class="method post">POST</span>
         <span class="operation path" data-search="/v0/vpa" title="/v0/vpa">/v0/vpa</span>
         <div class="stat-stack dim"><span class="n">0</span><span class="l">parameters</span></div>
@@ -2442,8 +2442,8 @@ input:focus-visible {
         </div>
         <span class="accordion-arrow" aria-hidden="true"><svg width="12" height="12"><use href="#icon-arrow"/></svg></span>
     </label>
-    <div class="accordion-content"><div class="op-detail"><div class="op-errors">Connection failed</div><div class="op-section"><span>Responses</span><span class="op-section-meta"><b>0 of 5</b> documented received</span></div>
-<div class="op-cols"><span class="ch-c">code</span><span class="ch-d">description</span><span class="ch-h">hits</span><span class="ch-a">avg</span></div><div class="op-resp-row success never"><span class="code">200</span><span class="desc" title="Age cohort catch-at-age data indexed by age group and year">Age cohort catch-at-age data indexed by age group and year</span><span class="hits">0</span><span class="avg">never seen</span></div><div class="op-resp-row client never"><span class="code">400</span><span class="desc" title="Bad Request - Invalid JSON or request format">Bad Request - Invalid JSON or request format</span><span class="hits">0</span><span class="avg">never seen</span></div><div class="op-resp-row client never"><span class="code">404</span><span class="desc" title="Not Found - Failed to download CSV files from URL">Not Found - Failed to download CSV files from URL</span><span class="hits">0</span><span class="avg">never seen</span></div><div class="op-resp-row client never"><span class="code">409</span><span class="desc" title="Conflict - Data format error or processing incompatibility">Conflict - Data format error or processing incompatibility</span><span class="hits">0</span><span class="avg">never seen</span></div><div class="op-resp-row server never"><span class="code">500</span><span class="desc" title="Internal Server Error">Internal Server Error</span><span class="hits">0</span><span class="avg">never seen</span></div>
+    <div class="accordion-content"><div class="op-detail"><div class="op-section"><span>Responses</span><span class="op-section-meta"><b>3 of 5</b> documented received</span></div>
+<div class="op-cols"><span class="ch-c">code</span><span class="ch-d">description</span><span class="ch-h">hits</span><span class="ch-a">avg</span></div><div class="op-resp-row success "><span class="code">200</span><span class="desc" title="Age cohort catch-at-age data indexed by age group and year">Age cohort catch-at-age data indexed by age group and year</span><span class="hits">45</span><span class="avg">253<span class="unit">ms</span></span></div><div class="op-resp-row client "><span class="code">400</span><span class="desc" title="Bad Request - Invalid JSON or request format">Bad Request - Invalid JSON or request format</span><span class="hits">125</span><span class="avg">4<span class="unit">ms</span></span></div><div class="op-resp-row client "><span class="code">404</span><span class="desc" title="Not Found - Failed to download CSV files from URL">Not Found - Failed to download CSV files from URL</span><span class="hits">71</span><span class="avg">261<span class="unit">ms</span></span></div><div class="op-resp-row client never"><span class="code">409</span><span class="desc" title="Conflict - Data format error or processing incompatibility">Conflict - Data format error or processing incompatibility</span><span class="hits">0</span><span class="avg">never seen</span></div><div class="op-resp-row server never"><span class="code">500</span><span class="desc" title="Internal Server Error">Internal Server Error</span><span class="hits">0</span><span class="avg">never seen</span></div>
 </div></div>
 </div>
     </div>
