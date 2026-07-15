@@ -27,12 +27,16 @@ help:
 	@echo "  make docker-build && make test"
 
 run:
-	VALIDATE_RESPONSE=true LOG_LEVEL=$(LOG_LEVEL) OPENAPI_SPEC_PATH=../../schema/openapi.yaml PLUMBER_PORT=$(PLUMBER_DEV_PORT) Rscript run.R
+	VALIDATE_RESPONSE=true \
+	LOG_LEVEL=$(LOG_LEVEL) \
+	OPENAPI_SPEC_PATH=./schema/openapi.yaml \
+	PLUMBER_PORT=$(PLUMBER_DEV_PORT) \
+	Rscript run.R
 
 test:
 	docker run --rm \
 	  --network $(DOCKER_NETWORK) \
-	  -v $$(pwd)/../../schema:/schema \
+	  -v $$(pwd)/schema:/schema \
  	  -v $$(pwd)/../../schemathesis.toml:/workspace/schemathesis.toml \
 	  -v $$(pwd)/../..:/workspace \
 	  -w /workspace/.schemathesis \
@@ -43,7 +47,7 @@ test:
 
 test-local:
 	docker run --rm \
-	  -v $$(pwd)/../../schema:/schema \
+	  -v $$(pwd)/schema:/schema \
 	  -v $$(pwd)/../../schemathesis.toml:/workspace/schemathesis.toml \
 	  -v $$(pwd)/../..:/workspace \
 	  -w /workspace \

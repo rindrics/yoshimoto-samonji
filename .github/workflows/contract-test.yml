@@ -3,7 +3,7 @@ name: Contract Tests
 on:
   pull_request:
     paths:
-      - 'schema/openapi.yaml'
+      - 'adapters/legacy/schema/openapi.yaml'
       - 'adapters/legacy/**'
       - 'docker-compose.yml'
       - '.github/workflows/contract-test.yml'
@@ -11,7 +11,7 @@ on:
     branches:
       - main
     paths:
-      - 'schema/openapi.yaml'
+      - 'adapters/legacy/schema/openapi.yaml'
       - 'adapters/legacy/**'
 
 env:

@@ -3,13 +3,13 @@ name: Validate OpenAPI YAML
 on:
   pull_request:
     paths:
-      - 'schema/openapi.yaml'
+      - 'adapters/legacy/schema/openapi.yaml'
       - '.github/workflows/validate-openapi.yml'
   push:
     branches:
       - main
     paths:
-      - 'schema/openapi.yaml'
+      - 'adapters/legacy/schema/openapi.yaml'
 
 jobs:
   validate-yaml:
@@ -20,7 +20,7 @@ jobs:
       - name: Validate OpenAPI YAML syntax
         uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c  # v3.1.1
         with:
-          file_or_dir: schema/openapi.yaml
+          file_or_dir: adapters/legacy/schema/openapi.yaml
           config_data: |
             extends: default
             rules:
