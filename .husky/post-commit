@@ -2,7 +2,7 @@
 . "$(dirname "$0")/_/husky.sh"
 
 # Get files changed in the last commit
-CHANGED_FILES=$(git diff HEAD~1..HEAD --name-only 2>/dev/null | grep '\.R$' | grep 'adapters/legacy' || echo "")
+CHANGED_FILES=$(git diff HEAD~1..HEAD --name-only 2>/dev/null | grep '\.R$' | grep 'services/monolith' || echo "")
 
 if [ -z "$CHANGED_FILES" ]; then
   exit 0
@@ -11,9 +11,9 @@ fi
 echo "📝 Formatting files from last commit..."
 
 # Format only the changed R files from the last commit
-cd adapters/legacy
+cd services/monolith
 for file in $CHANGED_FILES; do
-  air format "${file#adapters/legacy/}" 2>/dev/null
+  air format "${file#services/monolith/}" 2>/dev/null
 done
 
 # Show diff if there are formatting changes

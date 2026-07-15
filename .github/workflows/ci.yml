@@ -3,13 +3,13 @@ name: CI - Lint and Format
 on:
   pull_request:
     paths:
-      - 'adapters/legacy/**'
+      - 'services/monolith/**'
       - '.github/workflows/ci.yml'
   push:
     branches:
       - main
     paths:
-      - 'adapters/legacy/**'
+      - 'services/monolith/**'
       - '.github/workflows/ci.yml'
 
 jobs:
@@ -24,7 +24,7 @@ jobs:
           r-version: '4.5.2'
 
       - name: Install lintr
-        working-directory: adapters/legacy
+        working-directory: services/monolith
         run: install.packages("lintr")
         shell: Rscript {0}
 
@@ -42,5 +42,5 @@ jobs:
         run: curl -LsSf https://github.com/posit-dev/air/releases/latest/download/air-installer.sh | sh
 
       - name: Check formatting
-        working-directory: adapters/legacy
+        working-directory: services/monolith
         run: make format CHECK=--check

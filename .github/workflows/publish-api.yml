@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'adapters/legacy/**'
+      - 'services/monolith/**'
       - '.github/workflows/publish-api.yml'
   release:
     types: [published]
@@ -50,7 +50,7 @@ jobs:
 
       - name: Build Docker image
         run: make docker-build
-        working-directory: ./adapters/legacy
+        working-directory: ./services/monolith
         env:
           BUILD_IMAGE: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 

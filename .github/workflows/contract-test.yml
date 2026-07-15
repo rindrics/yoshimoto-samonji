@@ -3,16 +3,16 @@ name: Contract Tests
 on:
   pull_request:
     paths:
-      - 'adapters/legacy/schema/openapi.yaml'
-      - 'adapters/legacy/**'
+      - 'services/monolith/schema/openapi.yaml'
+      - 'services/monolith/**'
       - 'docker-compose.yml'
       - '.github/workflows/contract-test.yml'
   push:
     branches:
       - main
     paths:
-      - 'adapters/legacy/schema/openapi.yaml'
-      - 'adapters/legacy/**'
+      - 'services/monolith/schema/openapi.yaml'
+      - 'services/monolith/**'
 
 env:
   LOCAL_IMAGE: yoshimotosamonji-monolith
@@ -33,8 +33,8 @@ jobs:
       - name: Build and cache plumber image
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a  # v7.3.0
         with:
-          context: ./adapters/legacy
-          file: ./adapters/legacy/Dockerfile
+          context: ./services/monolith
+          file: ./services/monolith/Dockerfile
           load: true
           tags: |
             ${{ env.LOCAL_IMAGE }}:${{ github.sha }}
@@ -58,7 +58,7 @@ jobs:
 
       - name: Run contract tests
         run: |
-          make -C adapters/legacy test
+          make -C services/monolith test
         env:
           COMPOSE_PROJECT_NAME: yoshimoto-samonji
 

@@ -9,8 +9,8 @@ services:
       LOG_LEVEL: "${LOG_LEVEL:-INFO}"
       VALIDATE_RESPONSE: "${VALIDATE_RESPONSE:-false}"
     volumes:
-      - ./adapters/legacy/R:/app/R
-      - ./adapters/legacy/schema:/app/schema
+      - ./services/monolith/R:/app/R
+      - ./services/monolith/schema:/app/schema
     networks:
       - yoshimoto-samonji
 
