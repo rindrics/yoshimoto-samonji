@@ -10,7 +10,7 @@ services:
       VALIDATE_RESPONSE: "${VALIDATE_RESPONSE:-false}"
     volumes:
       - ./adapters/legacy/R:/app/R
-      - ./schema:/app/schema
+      - ./adapters/legacy/schema:/app/schema
     networks:
       - yoshimoto-samonji
 

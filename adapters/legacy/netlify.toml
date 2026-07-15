@@ -1,0 +1,8 @@
+[build]
+  publish = "docs"
+  command = "cp schema/openapi.yaml docs/"
+
+[[redirects]]
+  from = "/"
+  to = "/api.html"
+  status = 200
