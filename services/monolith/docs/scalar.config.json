@@ -1,0 +1,24 @@
+{
+  "$schema": "https://registry.scalar.com/@scalar/schemas/config",
+  "scalar": "2.0.0",
+  "info": {
+    "title": "Yoshimoto Samonji API"
+  },
+  "versions": {
+    "default": {
+      "title": "v0.1",
+      "routes": {
+        "/": {
+          "type": "group",
+          "title": "Documentation",
+          "children": {
+            "/api": {
+              "type": "openapi",
+              "filepath": "./openapi-v0.1.yaml"
+            }
+          }
+        }
+      }
+    }
+  }
+}
