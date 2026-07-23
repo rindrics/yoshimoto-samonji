@@ -1,4 +1,4 @@
-.PHONY: run docker-build test clean setup format lint build-docs help
+.PHONY: run docker-build test clean setup format lint build-docs build help
 
 LOG_LEVEL ?= DEBUG
 PLUMBER_PORT ?= 8000
@@ -15,6 +15,17 @@ build-docs:
 	mkdir -p docs
 	cp schema/openapi.yaml docs/openapi-$(LATEST_VERSION_SERIES).yaml
 	cp schema/openapi.yaml docs/openapi-latest.yaml
+ifeq ($(CI),true)
+	@if git diff --quiet docs/; then \
+		echo "✓ docs/ is up to date"; \
+	else \
+		echo "✗ Error: docs/ has uncommitted changes after build"; \
+		git diff docs/; \
+		exit 1; \
+	fi
+endif
+
+build: build-docs
 
 help:
 	@echo "Available targets:"
@@ -26,6 +37,7 @@ help:
 	@echo "  make lint         - Lint R code with lintr"
 	@echo "  make docker-build - Build Docker image"
 	@echo "  make build-docs   - Build Scalar Docs (copies OpenAPI specs)"
+	@echo "  make build        - Build docs (CI=true to verify no changes after build)"
 	@echo "  make clean        - Remove schema files"
 	@echo ""
 	@echo "Examples:"
