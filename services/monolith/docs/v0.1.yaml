@@ -1,0 +1,209 @@
+---
+openapi: 3.2.0
+info:
+  description: API for stock assessment calculation using ichimomo/frasyr
+  title: Stock Assessment API
+  version: 0.1.0
+  contact:
+    name: rindrics
+    url: https://github.com/rindrics/yoshimoto-samonji
+    email: dev+yoshimoto-samonji@rindrics.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+paths:
+  /v0/vpa:
+    post:
+      operationId: /v0/vpa-POST
+      summary: Run VPA
+      description: Run Virtual Population Analysis
+      responses:
+        "200":
+          description: Age cohort catch-at-age data indexed by age group and year
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Object with age groups (e.g., age0, age1, age2...) as keys. Each age group contains yearly catch-at-age values.
+                additionalProperties:
+                  type: object
+                  description: Year to catch weight mapping for each age group
+                  additionalProperties:
+                    type: number
+                    description: Catch weight at age for the year
+              example:
+                age0:
+                  "1988": 6816.76
+                  "1989": 8429.68
+                  "1990": 8145.12
+                  "1991": 2817.16
+                age1:
+                  "1988": 5234.56
+                  "1989": 6345.67
+                  "1990": 7456.78
+                  "1991": 4567.89
+        "400":
+          description: Bad Request - Invalid JSON or request format
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message(s) describing the validation failure (multiple errors separated by newlines)
+        "404":
+          description: Not Found - Failed to download CSV files from URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    oneOf:
+                      - type: string
+                      - type: array
+                        items:
+                          type: string
+                    description: Error message(s) indicating file download failure
+        "409":
+          description: Conflict - Data format error or processing incompatibility
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing data format or processing issue
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message describing the internal server error
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              required:
+                - data
+              additionalProperties: false
+              properties:
+                data:
+                  type: object
+                  minProperties: 3
+                  required:
+                    - caa_url
+                    - waa_url
+                    - maa_url
+                  additionalProperties: false
+                  properties:
+                    caa_url:
+                      type: string
+                      format: uri
+                      minLength: 2
+                      description: URL to catch-at-age CSV file
+                    waa_url:
+                      type: string
+                      format: uri
+                      description: URL to weight-at-age CSV file
+                    maa_url:
+                      type: string
+                      format: uri
+                      description: URL to maturity-at-age CSV file
+                params:
+                  type: object
+                  additionalProperties: false
+                  description: Optional VPA parameters
+                  properties:
+                    m:
+                      type: number
+                      exclusiveMinimum: 0
+                      default: 0.5
+                      description: Natural mortality rate
+                    fc_year:
+                      type: array
+                      minItems: 1
+                      items:
+                        type: integer
+                        minimum: 1950
+                        maximum: 2100
+                      example:
+                        - 2015
+                        - 2016
+                        - 2017
+                      description: Years for fishing mortality calculation
+                    tf_year:
+                      type: array
+                      minItems: 1
+                      items:
+                        type: integer
+                        minimum: 1950
+                        maximum: 2100
+                      example:
+                        - 2015
+                        - 2016
+                      description: Years for terminal F calculation
+                    term_f:
+                      type: string
+                      default: max
+                      enum:
+                        - max
+                        - mean
+                      description: Terminal F calculation method
+                    stat_tf:
+                      type: string
+                      default: mean
+                      enum:
+                        - mean
+                        - median
+                        - max
+                        - min
+                      description: Terminal F statistic
+                    pope:
+                      type: boolean
+                      default: true
+                      description: Use Pope's approximation
+                    tune:
+                      type: boolean
+                      enum:
+                        - false
+                      default: false
+                      description: Tune VPA parameters
+                    p_init:
+                      type: number
+                      exclusiveMinimum: 0
+                      default: 0.5
+                      description: Initial population parameter
+            example:
+              data:
+                caa_url: https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_caa.csv
+                waa_url: https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_waa.csv
+                maa_url: https://raw.githubusercontent.com/ichimomo/frasyr/dev/data-raw/ex2_maa.csv
+              params:
+                m: 0.5
+                fc_year:
+                  - 2015
+                  - 2016
+                  - 2017
+                tf_year:
+                  - 2015
+                  - 2016
+                term_f: max
+                stat_tf: mean
+                pope: true
+                tune: false
+                p_init: 0.5
+      tags:
+        - vpa
+tags:
+  - name: vpa
+    description: Operations for Virtual Population Analysis

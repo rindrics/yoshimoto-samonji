@@ -1,14 +1,38 @@
-.PHONY: run docker-build test clean setup format lint help
+.PHONY: run docker-build test clean setup format lint build-docs build docs help
 
 LOG_LEVEL ?= DEBUG
 PLUMBER_PORT ?= 8000
 CONTAINER_PORT ?= 8000
+SCALAR_DOCS_PORT ?= 8081
 DREDD_LOG_LEVEL ?= warning
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
 BUILD_IMAGE ?= $(LOCAL_IMAGE)
 GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
 COMPOSE_PROJECT_NAME ?= yoshimoto-samonji
 DOCKER_NETWORK := $(COMPOSE_PROJECT_NAME)_yoshimoto-samonji
+LATEST_VERSION_SERIES = v0.1
+
+build-docs:
+	mkdir -p docs
+	cp schema/openapi.yaml docs/$(LATEST_VERSION_SERIES).yaml
+	cp schema/openapi.yaml docs/latest.yaml
+ifeq ($(CI),true)
+	@if git diff --quiet docs/; then \
+		echo "✓ docs/ is up to date"; \
+	else \
+		echo "✗ Error: docs/ has uncommitted changes after build"; \
+		git diff docs/; \
+		exit 1; \
+	fi
+endif
+
+build: build-docs
+
+docs:
+	docker run --rm \
+	  -p $(SCALAR_DOCS_PORT):8080 \
+	  -v $$(pwd)/docs:/docs \
+	  scalarapi/api-reference:latest
 
 help:
 	@echo "Available targets:"
@@ -19,6 +43,9 @@ help:
 	@echo "  make format       - Format R code with air"
 	@echo "  make lint         - Lint R code with lintr"
 	@echo "  make docker-build - Build Docker image"
+	@echo "  make build-docs   - Build Scalar Docs (copies OpenAPI specs)"
+	@echo "  make build        - Build docs (CI=true to verify no changes after build)"
+	@echo "  make docs         - View docs locally with Scalar (http://localhost:8080)"
 	@echo "  make clean        - Remove schema files"
 	@echo ""
 	@echo "Examples:"
