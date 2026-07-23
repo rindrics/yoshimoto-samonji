@@ -1,6 +1,6 @@
 [build]
   publish = "docs"
-  command = "CI=true make build"
+  command = "cp schema/openapi.yaml docs/"
 
 [[redirects]]
   from = "/"
