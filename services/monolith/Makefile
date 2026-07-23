@@ -1,8 +1,9 @@
-.PHONY: run docker-build test clean setup format lint build-docs build help
+.PHONY: run docker-build test clean setup format lint build-docs build docs help
 
 LOG_LEVEL ?= DEBUG
 PLUMBER_PORT ?= 8000
 CONTAINER_PORT ?= 8000
+SCALAR_DOCS_PORT ?= 8081
 DREDD_LOG_LEVEL ?= warning
 LOCAL_IMAGE ?= yoshimotosamonji-monolith
 BUILD_IMAGE ?= $(LOCAL_IMAGE)
@@ -13,8 +14,8 @@ LATEST_VERSION_SERIES = v0.1
 
 build-docs:
 	mkdir -p docs
-	cp schema/openapi.yaml docs/openapi-$(LATEST_VERSION_SERIES).yaml
-	cp schema/openapi.yaml docs/openapi-latest.yaml
+	cp schema/openapi.yaml docs/$(LATEST_VERSION_SERIES).yaml
+	cp schema/openapi.yaml docs/latest.yaml
 ifeq ($(CI),true)
 	@if git diff --quiet docs/; then \
 		echo "✓ docs/ is up to date"; \
@@ -27,6 +28,12 @@ endif
 
 build: build-docs
 
+docs:
+	docker run --rm \
+	  -p $(SCALAR_DOCS_PORT):8080 \
+	  -v $$(pwd)/docs:/docs \
+	  scalarapi/api-reference:latest
+
 help:
 	@echo "Available targets:"
 	@echo "  make setup        - Install dev dependencies (air, lintr)"
@@ -38,6 +45,7 @@ help:
 	@echo "  make docker-build - Build Docker image"
 	@echo "  make build-docs   - Build Scalar Docs (copies OpenAPI specs)"
 	@echo "  make build        - Build docs (CI=true to verify no changes after build)"
+	@echo "  make docs         - View docs locally with Scalar (http://localhost:8080)"
 	@echo "  make clean        - Remove schema files"
 	@echo ""
 	@echo "Examples:"
