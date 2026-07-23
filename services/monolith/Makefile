@@ -1,4 +1,4 @@
-.PHONY: run docker-build test clean setup format lint help
+.PHONY: run docker-build test clean setup format lint build-docs help
 
 LOG_LEVEL ?= DEBUG
 PLUMBER_PORT ?= 8000
@@ -9,6 +9,12 @@ BUILD_IMAGE ?= $(LOCAL_IMAGE)
 GIT_COMMIT ?= $(shell git rev-parse --short HEAD)
 COMPOSE_PROJECT_NAME ?= yoshimoto-samonji
 DOCKER_NETWORK := $(COMPOSE_PROJECT_NAME)_yoshimoto-samonji
+LATEST_VERSION_SERIES = v0.1
+
+build-docs:
+	mkdir -p docs
+	cp schema/openapi.yaml docs/openapi-$(LATEST_VERSION_SERIES).yaml
+	cp schema/openapi.yaml docs/openapi-latest.yaml
 
 help:
 	@echo "Available targets:"
@@ -19,6 +25,7 @@ help:
 	@echo "  make format       - Format R code with air"
 	@echo "  make lint         - Lint R code with lintr"
 	@echo "  make docker-build - Build Docker image"
+	@echo "  make build-docs   - Build Scalar Docs (copies OpenAPI specs)"
 	@echo "  make clean        - Remove schema files"
 	@echo ""
 	@echo "Examples:"
